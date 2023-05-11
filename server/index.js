@@ -1,15 +1,5 @@
 const path = require('path')
 const express = require('express')
-
-const appp = express()
-const PORT = process.env.PORT || 8989
-
-// your code
-
-appp.listen(PORT, () => {
-  console.log(`server started on port ${PORT}`)
-})
-
 const cors = require('cors')
 const methodOverride = require('method-override')
 const morgan = require('morgan')
@@ -53,3 +43,7 @@ app.set('views', path.join(__dirname, '../test/resource/views'))
 
 //route khoi tao
 route(app)
+
+app.listen(port, () => {
+  console.log(`App listening on port http://localhost:${port}`)
+})
