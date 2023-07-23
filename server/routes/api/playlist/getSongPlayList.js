@@ -1,18 +1,34 @@
+const { isValidObjectId } = require("mongoose");
 const Playlist = require("../../../models/PlayList");
 const Song = require("../../../models/Song");
+const {
+  responseError,
+  responseSuccessDetails,
+} = require("../../../util/response");
 
-module.exports = (req, res, next) => {
-  Playlist.find(
-    {
-      _id: req.params.playlistId,
-    },
-    { songList: 1, _id: 0 }
-  )
-    .then((songList) => {
-      var arr = songList[0].songList;
-      const t = { _id: { $in: arr } };
-      Song.find(t).then((song) => res.send(song));
-    })
-    .catch(next);
+module.exports = async (req, res) => {
+  try {
+    const playlistId = req.params.playlistId;
 
+    if (!playlistId || isValidObjectId(playlistId)) {
+      return res.json(responseError("Playlist ID is wrong format", 400));
+    }
+
+    const playlist = await Playlist.findById(playlistId);
+
+    if (!playlist) {
+      return res.json(responseError("Play list not found"));
+    }
+
+    const songIds = playlist.songList;
+    if (!songIds.length) {
+      return res.json(responseSuccessDetails([]));
+    }
+
+    const songs = await Song.find({ _id: { $in: songIds } });
+    return res.json(responseSuccessDetails(songs));
+  } catch (error) {
+    console.error("Error:", error);
+    return res.json(responseError("Internal server error", 500));
+  }
 };

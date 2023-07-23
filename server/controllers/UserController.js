@@ -12,7 +12,6 @@ class UsersController {
   home(req, res, next) {
     Promise.all([User.find({}), User.countDocumentsDeleted()])
       .then(([user, deletedCount]) => {
-
         res.render("users/home", {
           deletedCount,
           user: multipleMongooseToObject(user),

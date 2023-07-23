@@ -1,144 +1,113 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const User = require("../../../models/User");
 const loginValidator = require("../../../validations/login");
-const loginGoogle = require("../../../validations/loginGoogle");
 const signupValidator = require("../../../validations/signup");
 const upload = require("../../../middlewares/uploadMiddleware");
-const jwt = require("jsonwebtoken");
-const co = require("co");
 const updateInfo = require("./updateInfo");
 const changePassword = require("./changePassword");
+const {
+  responseSuccessDetails,
+  responseError,
+} = require("../../../util/response");
 
 const router = express.Router();
 
-router.post("/login", (req, res, next) => {
-  const { username, password } = req.body;
-  const { isValid, errors } = loginValidator(req.body);
+router.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const { isValid, errors } = loginValidator(req.body);
 
-  if (!isValid) {
-    return res.status(400).json({ error: true, errors });
-  }
+    if (!isValid) {
+      return res.json(responseError(errors, 400));
+    }
 
-  co(function* () {
-    const user = yield User.findOne({ username });
+    const user = await User.findOne({ username });
+
     if (!user) {
-      res.status(401).json({
-        message: { msgBody: "Tên đăng nhập không đúng", msgError: true },
-      });
+      return res.json(responseError(errors, 400));
     }
 
-    const isMatch = yield user.comparePassword(password);
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      res.status(401).json({
-        message: { msgBody: "Mật khẩu không đúng", msgError: true },
-      });
+      return res.json(responseError("Mật khẩu không đúng", 401));
     }
 
-    return user;
-  })
-    .then((user) => {
-      const id = user._id;
+    const id = user._id;
 
-      const token = jwt.sign({ _id: id }, process.env.TOKEN_SECRET, {
-        expiresIn: 60 * 60 * 24,
-      });
-      res
-        .cookie("access_token", token, { httpOnly: true, sameSite: true })
-        .header({
-          username: user.username,
-        })
-        .send({ userId: id, isAuthen: true, access_token: token });
-    })
-    .catch((err) => next(err));
+    const token = jwt.sign({ _id: id }, process.env.TOKEN_SECRET, {
+      expiresIn: 60 * 60 * 24,
+    });
+    // .cookie("access_token", token, { httpOnly: true, sameSite: true })
+    // .header({
+    //   username: user.username,
+    // })
+    return res.json(
+      responseSuccessDetails({
+        userId: id,
+        isAuthen: true,
+        access_token: token,
+      })
+    );
+  } catch (err) {
+    console.error("Error:", err);
+
+    return res.json(responseError("Internal server error", 500));
+  }
 });
 
-router.post("/signup", (req, res, next) => {
-  const { username } = req.body;
-  const { isValid, errors } = signupValidator(req.body);
+router.post("/signup", async (req, res, next) => {
+  try {
+    const { username } = req.body;
+    const { isValid, errors } = signupValidator(req.body);
 
-  if (!isValid) {
-    return res.status(400).json({ error: true, errors });
-  }
+    if (!isValid) {
+      return res.json(responseError(errors, 400));
+    }
 
-  co(function* () {
-    const existingUser = yield User.findOne({ username });
+    const existingUser = await User.findOne({ username });
 
-    if (existingUser) return res.status(422).send("Username is exist");
+    if (existingUser) {
+      return res.json(responseError("Username is already taken", 422));
+    }
 
     const user = new User(req.body);
-    return user.save();
-  })
-    .then(() =>
-      res.status(200).json({
-        message: {
-          msgBody: "Tao tai khoan thanh cong",
-          msgError: false,
-        },
-      })
-    )
-    .catch((err) => next(err));
+    await user.save();
+    return res.json(responseSuccessDetails("Tạo tài khoản thành công"));
+  } catch (err) {
+    console.error("Error:", err);
+
+    return res.json(responseError("Internal server error", 500));
+  }
 });
 
 router.get("/logout", (req, res) => {
-  res
+  return res
     .clearCookie("access_token")
     .json({ user: { username: "" }, isAuthenticated: false });
 });
 
 router.get("/authen/:token", (req, res) => {
-  const token = req.params.token;
-
-  if (!token)
-    return res
-      .status(401)
-      .json({ isAuthenticated: false, error: "Không tìm thấy token" });
-
   try {
+    const token = req.params.token;
+
+    if (!token) return res.json(responseError("Token not found", 401));
+
     const verified = jwt.verify(token, process.env.TOKEN_SECRET);
     const userId = verified._id;
     User.findById({ _id: userId }, { password: 0 }).then((user) => {
-      res.status(200).send({
-        isAuthenticated: true,
-        user: user,
-      });
+      if (!user) {
+        return res.json(responseError("User not found", 401));
+      }
+      return res.json(responseSuccessDetails(user));
     });
   } catch (err) {
-    return res.status(401).json({ isAuthenticated: false });
+    console.error("Error:", err);
+    return res.json(responseError("Internal server error", 500));
   }
 });
 
 router.put("/update-user/:token", upload.single("image"), updateInfo);
 router.put("/change-password/:token", changePassword);
-
-
-router.post("/loginGoogle", (req, res, next) => {
- 
-  const { isValid, errors } = loginGoogle(req.body);
-
-  if (!isValid) {
-    return res.status(400).json({ error: true, errors });
-  }
-
-  co(function* () {
-    
-  })
-    .then(() => {
-      const id = userId;
-
-      const token = jwt.sign({ _id: id }, process.env.TOKEN_SECRET, {
-        expiresIn: 60 * 60 * 24,
-      });
-      res
-        .cookie("access_token", token, { httpOnly: true, sameSite: true })
-        .header({
-          username: user.fullName,
-        })
-        .send({ userId: id, isAuthen: true, access_token: token });
-    })
-    .catch((err) => next(err));
-});
-
-
-
 
 module.exports = router;
