@@ -6,14 +6,12 @@ class MusicController {
   index(req, res, next) {
     Song.find({})
       .then((song) => {
-        res.send( {
+        res.send({
           song: multipleMongooseToObject(song),
         });
       })
       .catch(next);
   }
-
-  
 }
 
 module.exports = new MusicController();
