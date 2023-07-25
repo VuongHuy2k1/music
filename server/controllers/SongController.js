@@ -58,7 +58,6 @@ class SongController {
   }
 
   update(req, res, next) {
-    
     Song.updateOne({ _id: req.params.id }, req.body)
       .then(() => res.redirect("/admin/song"))
       .catch(next);

@@ -1,26 +1,33 @@
 const Playlist = require("../../../models/PlayList");
 const path = require("path");
-
 const Resize = require("../../../middlewares/Resize");
+const { isValidObjectId } = require("mongoose");
 
-module.exports = async function (req, res, next) {
-  const imagePath = path.join("test/public/img");
-  const fileUpload = new Resize(imagePath);
-  const name = req.body.name;
+module.exports = async (req, res) => {
+  try {
+    const playlistId = req.params.playlistId;
+    const name = req.body.name;
 
-  if (req.file) {
-    const filename = await fileUpload.save(req.file.buffer);
-    Playlist.updateOne(
-      { _id: req.params.playlistId },
-      { img: filename, name: name }
-    )
-      .then(res.status(200).json("Thành công"))
-      .catch(next);
-  } else {
-    Playlist.updateOne({ _id: req.params.playlistId }, { name: name })
-      .then(res.status(200).json("Thành công"))
-      .catch(next);
+    if (!playlistId || isValidObjectId(playlistId)) {
+      return res.json(responseError("Playlist ID is wrong format", 400));
+    }
+
+    const imagePath = path.join("test/public/img");
+    const fileUpload = new Resize(imagePath);
+
+    if (req.file) {
+      const filename = await fileUpload.save(req.file.buffer);
+      await Playlist.updateOne(
+        { _id: playlistId },
+        { img: filename, name: name }
+      );
+    } else {
+      await Playlist.updateOne({ _id: playlistId }, { name: name });
+    }
+
+    return res.json(responseSuccessDetails({ message: "success" }));
+  } catch (error) {
+    console.error("Error:", error);
+    return res.json(responseError("Internal server error", 500));
   }
-    
-
 };

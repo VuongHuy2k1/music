@@ -1,5 +1,5 @@
 const Album = require("../models/Album");
-const User = require("../models/User")
+const User = require("../models/User");
 const { multipleMongooseToObject } = require("../util/mongoose");
 
 class SitesController {
@@ -18,7 +18,7 @@ class SitesController {
   admin(req, res, next) {
     Promise.all([User.find({}), User.countDocumentsDeleted()])
       .then(([user, deletedCount]) =>
-        res.send( {
+        res.send({
           deletedCount,
           user: user,
         })

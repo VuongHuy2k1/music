@@ -21,13 +21,12 @@ class AlbumController {
   show(req, res, next) {
     Album.findOne({ _id: req.params.id })
       .then((album) => {
-        var albumName = album.name
-        Song.find({ album: albumName }).
-        then((song) => {
-          res.render("./albums/show", 
-          { song: multipleMongooseToObject(song),
-            album : mongooseToObject(album)
-           });
+        var albumName = album.name;
+        Song.find({ album: albumName }).then((song) => {
+          res.render("./albums/show", {
+            song: multipleMongooseToObject(song),
+            album: mongooseToObject(album),
+          });
         });
       })
       .catch(next);
