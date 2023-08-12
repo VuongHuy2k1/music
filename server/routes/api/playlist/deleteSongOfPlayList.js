@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
     const songId = req.params.songId;
     const playlistId = req.params.playlistId;
 
-    if (!playlistId || !songId || isValidObjectId(playlistId)) {
+    if (!playlistId || !songId || !isValidObjectId(playlistId)) {
       return res.status(400).send("Playlist ID or song ID are wrong format");
     }
 

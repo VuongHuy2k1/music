@@ -14,9 +14,9 @@ module.exports = async (req, res, next) => {
     const totalSongsCount = await Song.countDocuments({
       type: req.params.type,
     });
-    const songs = await Song.find({ type: req.params.type })
-      .skip(perPage * (page - 1))
-      .limit(perPage);
+    const songs = await Song.find({ type: req.params.type });
+    // .skip(perPage * (page - 1))
+    // .limit(perPage);
 
     return res.json(
       responseSuccessDetails({

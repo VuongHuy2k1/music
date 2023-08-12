@@ -1,7 +1,10 @@
-const admin = require("./admin");
+const admin = require("./adminLocal");
+const adminAPIA = require("./adminApi");
 const api = require("./api");
-// const { responseSuccessDetails, responseError } = require("../util/response");
-// const { isValidObjectId } = require("mongoose");
+// test api
+const { responseSuccessDetails, responseError } = require("../util/response");
+const { isValidObjectId } = require("mongoose");
+const Song = require("../models/Song");
 
 function route(app) {
   app.use(function (req, res, next) {
@@ -17,20 +20,31 @@ function route(app) {
 
   app.use("/admin", admin);
 
-  // app.use("/test/:a", async function (req, res, next) {
-  //   try {
-  //     const a = req.params.a;
-  //     if (isValidObjectId(a)) {
-  //       return res.json(responseSuccessDetails("Update success"));
-  //     } else {
-  //       return res.json(responseSuccessDetails("Update success"));
-  //     }
-  //   } catch (error) {
-  //     console.error("Error:", error);
+  app.use("/admin-api", adminAPIA);
 
-  //     return res.status(500).json(responseError("Internal server error"));
-  //   }
-  // });
+  app.use("/test/:param", async function (req, res, next) {
+    try {
+      const param = req.params.param;
+      const today = new Date();
+      if (isValidObjectId(param)) {
+        const song = await Song.findById(param);
+        song.viewsLast24Hours = [
+          1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3,
+          4,
+        ];
+        song.viewsDay = 100;
+        song.lastViewDate = today;
+        song.save();
+        return res.json(responseSuccessDetails(song));
+      } else {
+        return res.json(responseSuccessDetails("Update success"));
+      }
+    } catch (error) {
+      console.error("Error:", error);
+
+      return res.status(500).json(responseError("Internal server error"));
+    }
+  });
 }
 
 module.exports = route;

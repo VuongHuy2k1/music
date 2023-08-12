@@ -77,9 +77,12 @@ module.exports = async (req, res) => {
     const perPage = 5;
     const startIndex = (page - 1) * perPage;
 
-    const paginatedSong = song.slice(startIndex, startIndex + perPage);
-    const paginatedAlbum = album.slice(startIndex, startIndex + perPage);
-    const paginatedSinger = singer.slice(startIndex, startIndex + perPage);
+    // const paginatedSong = song.slice(startIndex, startIndex + perPage);
+    // const paginatedAlbum = album.slice(startIndex, startIndex + perPage);
+    // const paginatedSinger = singer.slice(startIndex, startIndex + perPage);
+    const paginatedSong = song;
+    const paginatedAlbum = album;
+    const paginatedSinger = singer;
 
     return res.json(
       responseSuccessDetails({

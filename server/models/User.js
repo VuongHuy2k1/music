@@ -23,10 +23,10 @@ const userSchema = new Schema(
     gender: { type: String },
     dateOfBirth: { type: Date },
     nation: { type: String },
-    role: { type: String , default:""},
-    lastList: { type: String , default:""},
-    typeList : {type :String, default:""},
-    lastSong: { type: String, default:"" },
+    role: { type: String, default: "" },
+    lastList: { type: String, default: "" },
+    typeList: { type: String, default: "" },
+    lastSong: { type: String, default: "" },
   },
   { timestamps: true }
 );

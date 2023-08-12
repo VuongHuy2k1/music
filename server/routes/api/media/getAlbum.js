@@ -15,9 +15,9 @@ module.exports = async (req, res, next) => {
     }
 
     const totalAlbumsCount = await Album.countDocuments({});
-    const albums = await Album.find({})
-      .skip(perPage * (page - 1))
-      .limit(perPage);
+    const albums = await Album.find({});
+    // .skip(perPage * (page - 1))
+    // .limit(perPage);
 
     return res.json(
       responseSuccessDetails({

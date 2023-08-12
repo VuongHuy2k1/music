@@ -14,9 +14,9 @@ const Song = new Schema(
     legion: { type: String },
     views: { type: Number, default: 0 },
     lastViewDate: { type: Date },
-    viewsDay: { type: Number },
-    viewsWeek: { type: Number },
-    viewsMonth: { type: Number },
+    viewsDay: { type: Number, default: 0 },
+    viewsWeek: { type: Number, default: 0 },
+    viewsMonth: { type: Number, default: 0 },
     viewsLast24Hours: [
       { type: Number, default: 0 },
       { type: Number, default: 0 },

@@ -15,9 +15,9 @@ module.exports = async (req, res) => {
     }
 
     const totalSingersCount = await Singer.countDocuments({});
-    const singers = await Singer.find({})
-      .skip(perPage * (page - 1))
-      .limit(perPage);
+    const singers = await Singer.find({});
+    // .skip(perPage * (page - 1))
+    // .limit(perPage);
 
     return res.json(
       responseSuccessDetails({

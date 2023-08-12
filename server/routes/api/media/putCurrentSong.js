@@ -63,6 +63,7 @@ module.exports = async (req, res, next) => {
     // If the last view was more than 24 hours ago, reset the viewsLast24Hours array
     if (hoursDifference >= 24) {
       song.viewsLast24Hours = Array(24).fill(0);
+      song.viewsDay = 0;
     }
 
     // Update last 24h view

@@ -9,8 +9,8 @@ const {
 module.exports = async (req, res) => {
   try {
     const playlistId = req.params.playlistId;
-
-    if (!playlistId || isValidObjectId(playlistId)) {
+    console.log(playlistId);
+    if (!playlistId || !isValidObjectId(playlistId)) {
       return res.json(responseError("Playlist ID is wrong format", 400));
     }
 
@@ -26,6 +26,7 @@ module.exports = async (req, res) => {
     }
 
     const songs = await Song.find({ _id: { $in: songIds } });
+    console.log(songs.length);
     return res.json(responseSuccessDetails(songs));
   } catch (error) {
     console.error("Error:", error);

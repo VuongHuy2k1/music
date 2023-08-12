@@ -1,7 +1,7 @@
 const express = require("express");
-const verifyToken = require("../.././middlewares/verifyToken");
+const verifyToken = require("../../middlewares/verifyToken");
 const updateInfo = require("./updateInfoUser");
-const upload = require("../.././middlewares/uploadMiddleware");
+const upload = require("../../middlewares/uploadMiddleware");
 
 const router = express.Router();
 

@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
   try {
     const playlistId = req.params.playlistId;
 
-    if (!playlistId || isValidObjectId(playlistId)) {
+    if (!playlistId || !isValidObjectId(playlistId)) {
       return res.json(responseError("Playlist ID is wrong", 400));
     }
 
