@@ -7,7 +7,7 @@ const {
 module.exports = async (req, res) => {
   try {
     const perPage = 5;
-    const page = parseInt(req.params.page) || 1;
+    const page = req.params.page || 1;
 
     if (page < 1) {
       const allSingers = await Singer.find({});
@@ -15,9 +15,9 @@ module.exports = async (req, res) => {
     }
 
     const totalSingersCount = await Singer.countDocuments({});
-    const singers = await Singer.find({});
-    // .skip(perPage * (page - 1))
-    // .limit(perPage);
+    const singers = await Singer.find({})
+      .skip(perPage * (page - 1))
+      .limit(perPage);
 
     return res.json(
       responseSuccessDetails({

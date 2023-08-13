@@ -7,7 +7,7 @@ const {
 module.exports = async (req, res, next) => {
   try {
     const perPage = 5;
-    const page = parseInt(req.params.page) || 1;
+    const page = req.params.page || 1;
     const albumType = req.params.type;
 
     if (page < 1) {

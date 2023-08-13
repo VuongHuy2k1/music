@@ -1,12 +1,14 @@
 const express = require("express");
 const adminAPIAlbums = require("./albums/AdminAPIAlbums");
 const adminApiSinger = require("./singers/AdminAPISinger");
-const adminApiSong = require("./songs/AdminApiSongs");
+const adminApiSong = require("./songs/AdminApiUser");
+const adminApiUser = require("./user/AdminApiUser");
 
 const router = express.Router();
 
 router.use("/album", adminAPIAlbums);
 router.use("/singer", adminApiSinger);
 router.use("/song", adminApiSong);
+router.use("/user", adminApiUser);
 
 module.exports = router;

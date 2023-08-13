@@ -4,7 +4,7 @@ const { responseError } = require("../../../util/response");
 module.exports = async (req, res, next) => {
   try {
     const perPage = 5;
-    let page = parseInt(req.params.page) || 1;
+    let page = req.params.page || 1;
 
     if (page < 1) {
       const songs = await Song.find({ type: req.params.type });
@@ -14,9 +14,9 @@ module.exports = async (req, res, next) => {
     const totalSongsCount = await Song.countDocuments({
       type: req.params.type,
     });
-    const songs = await Song.find({ type: req.params.type });
-    // .skip(perPage * (page - 1))
-    // .limit(perPage);
+    const songs = await Song.find({ type: req.params.type })
+      .skip(perPage * (page - 1))
+      .limit(perPage);
 
     return res.json(
       responseSuccessDetails({

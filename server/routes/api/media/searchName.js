@@ -65,7 +65,7 @@ const { responseSuccessDetails } = require("../../../util/response");
 
 module.exports = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
+    const page = req.query.page || 1;
     const name_search = req.query.name;
 
     const [album, song, singer] = await Promise.all([

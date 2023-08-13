@@ -7,7 +7,7 @@ const {
 module.exports = async (req, res) => {
   try {
     const perPage = 5;
-    const page = parseInt(req.params.page) || 1;
+    const page = req.params.page || 1;
     const albumName = req.params.name;
 
     if (page < 1) {
@@ -16,9 +16,9 @@ module.exports = async (req, res) => {
     }
 
     const totalSongsCount = await Song.countDocuments({ album: albumName });
-    const songs = await Song.find({ album: albumName });
-    // .skip(perPage * (page - 1))
-    // .limit(perPage);
+    const songs = await Song.find({ album: albumName })
+      .skip(perPage * (page - 1))
+      .limit(perPage);
 
     return res.json(
       responseSuccessDetails({
