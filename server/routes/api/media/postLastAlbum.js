@@ -16,7 +16,6 @@ module.exports = (req, res, next) => {
         { _id: id },
         { lastList: lastAlbum, typeList: typeList, lastSong: lastSong }
       )
-      
         .then(next)
         .catch(next);
     } else if (lastPlaylist) {

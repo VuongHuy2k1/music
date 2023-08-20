@@ -7,7 +7,7 @@ router.get("/edit/:id", albumsController.edit);
 router.post("/store", albumsController.store);
 router.get("/bin", albumsController.albumBin);
 router.get("/create", albumsController.create);
-router.post('/handle-form-action', albumsController.handleFormAction)
+router.post("/handle-form-action", albumsController.handleFormAction);
 router.get("/show/:id", albumsController.show);
 router.put("/:id", albumsController.update);
 router.patch("/restore/:id", albumsController.restore);

@@ -9,7 +9,6 @@ const getSongPlayList = require("./getSongPlayList");
 const updatePlaylistImg = require("./updatePlaylistImg");
 const addSongToPlayList = require("./addSongToPlayList");
 const deleteSongOfPlayList = require("./deleteSongOfPlayList");
-
 const router = express.Router();
 
 router.get("/get-playlist/:userId", getPlayList);

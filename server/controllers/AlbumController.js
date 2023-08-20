@@ -1,128 +1,171 @@
 const Album = require("../models/Album");
 const Song = require("../models/Song");
 const Singer = require("../models/Singer");
-const { multipleMongooseToObject } = require("../util/mongoose");
-const { mongooseToObject } = require("../util/mongoose");
+const {
+  multipleMongooseToObject,
+  mongooseToObject,
+} = require("../util/mongoose");
 const slugify = require("slugify");
 
 class AlbumController {
-  index(req, res, next) {
-    Promise.all([Album.find({}), Album.countDocumentsDeleted()])
-      .then(([album, deletedCount]) =>
-        res.render("./albums/albums", {
-          deletedCount,
-          album: multipleMongooseToObject(album),
-        })
-      )
-      .catch(next);
-  }
-
-  // album/:slug [GET]
-  show(req, res, next) {
-    Album.findOne({ _id: req.params.id })
-      .then((album) => {
-        var albumName = album.name
-        Song.find({ album: albumName }).
-        then((song) => {
-          res.render("./albums/show", 
-          { song: multipleMongooseToObject(song),
-            album : mongooseToObject(album)
-           });
-        });
-      })
-      .catch(next);
-  }
-
-  // album/create [GET]
-  create(req, res, next) {
-    Singer.find({}).then((singer) => {
-      res.render("./albums/create", {
-        singer: multipleMongooseToObject(singer),
+  async index(req, res, next) {
+    try {
+      const [albums, deletedCount] = await Promise.all([
+        Album.find({}),
+        Album.countDocumentsDeleted(),
+      ]);
+      res.render("./albums/albums", {
+        deletedCount,
+        albums: multipleMongooseToObject(albums),
       });
-    });
-  }
-
-  // [POST] album/store
-  store(req, res, next) {
-    const album = new Album(req.body);
-    album
-      .save()
-      .then(() => res.redirect("/admin/album"))
-      .catch((error) => {});
-  }
-
-  // album/edit/:id [GET]
-  edit(req, res, next) {
-    Album.findOne({ _id: req.params.id })
-      .then((album) => {
-        res.render("./albums/edit", {
-          album: mongooseToObject(album),
-        });
-      })
-      .catch(next);
-  }
-
-  // [PUT] album/:slug
-  update(req, res, next) {
-    const formData = req.body;
-    formData.slug = slugify(formData.name, {
-      remove: /[*+~.,()'"!:@]/g,
-      lower: true,
-      strict: true,
-      locale: "vi",
-    });
-    //update course after adding image, slug
-    Album.updateOne({ _id: req.params.id }, formData)
-      .then(() => res.redirect("/album"))
-      .catch(next);
-  }
-
-  // [DELETE] /album/:id
-  destroy(req, res, next) {
-    Album.delete({ _id: req.params.id })
-      .then(() => res.redirect("back"))
-      .catch(next);
-  }
-
-  // [DELETE] /album/force/:id
-  forceDestroy(req, res, next) {
-    Album.deleteOne({ _id: req.params.id })
-      .then(() => res.redirect("back"))
-      .catch(next);
-  }
-
-  // [GET] /album/bin
-  albumBin(req, res, next) {
-    Album.findDeleted({})
-      .then((album) => {
-        res.render("./albums/bin", {
-          album: multipleMongooseToObject(album),
-        });
-      })
-      .catch(next);
-  }
-
-  // [PATCH] album/restore/:id
-  restore(req, res, next) {
-    Album.restore({ _id: req.params.id })
-      .then(() => res.redirect("back"))
-      .catch(next);
-  }
-
-  // [POST] album/handle-form-action
-  handleFormAction(req, res, next) {
-    switch (req.body.actionName) {
-      case "delete":
-        Album.delete({ _id: { $in: req.body.albumIDs } })
-          .then(() => res.redirect("back"))
-          .catch(next);
-        break;
-      default:
-        res.json({ message: "Sai" });
+    } catch (err) {
+      next(err);
     }
   }
 
-  // res.json(req.body)
+  // album/:id [GET]
+  async show(req, res, next) {
+    try {
+      const album = await Album.findById(req.params.id);
+      if (!album) {
+        return res.status(404).send("Album not found");
+      }
+
+      const albumName = album.name;
+      const songs = await Song.find({ album: albumName });
+
+      res.render("./albums/show", {
+        songs: multipleMongooseToObject(songs),
+        album: mongooseToObject(album),
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // album/create [GET]
+  async create(req, res, next) {
+    try {
+      const singers = await Singer.find({});
+      res.render("./albums/create", {
+        singers: multipleMongooseToObject(singers),
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // [POST] album/store
+  async store(req, res, next) {
+    try {
+      const formData = req.body;
+      formData.slug = slugify(formData.name, {
+        remove: /[*+~.,()'"!:@]/g,
+        lower: true,
+        strict: true,
+        locale: "vi",
+      });
+
+      const album = new Album(formData);
+      await album.save();
+
+      res.redirect("/admin/album");
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // album/edit/:id [GET]
+  async edit(req, res, next) {
+    try {
+      const album = await Album.findById(req.params.id);
+      if (!album) {
+        return res.status(404).send("Album not found");
+      }
+
+      res.render("./albums/edit", {
+        album: mongooseToObject(album),
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // [PUT] album/:id
+  async update(req, res, next) {
+    try {
+      const formData = req.body;
+      formData.slug = slugify(formData.name, {
+        remove: /[*+~.,()'"!:@]/g,
+        lower: true,
+        strict: true,
+        locale: "vi",
+      });
+
+      await Album.updateOne({ _id: req.params.id }, formData);
+      res.redirect("/album");
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // [DELETE] /album/:id
+  async destroy(req, res, next) {
+    try {
+      await Album.deleteOne({ _id: req.params.id });
+      res.redirect("back");
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // [DELETE] /album/force/:id
+  async forceDestroy(req, res, next) {
+    try {
+      await Album.deleteOne({ _id: req.params.id });
+      res.redirect("back");
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // [GET] /album/bin
+  async albumBin(req, res, next) {
+    try {
+      const albums = await Album.findDeleted({});
+      res.render("./albums/bin", {
+        albums: multipleMongooseToObject(albums),
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // [PATCH] album/restore/:id
+  async restore(req, res, next) {
+    try {
+      await Album.restore({ _id: req.params.id });
+      res.redirect("back");
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // [POST] album/handle-form-action
+  async handleFormAction(req, res, next) {
+    try {
+      switch (req.body.actionName) {
+        case "delete":
+          await Album.deleteMany({ _id: { $in: req.body.albumIDs } });
+          res.redirect("back");
+          break;
+        default:
+          res.json({ message: "Invalid action" });
+      }
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = new AlbumController();
