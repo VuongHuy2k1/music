@@ -1,7 +1,7 @@
 const express = require("express");
 const adminAPIAlbums = require("./albums/AdminAPIAlbums");
 const adminApiSinger = require("./singers/AdminAPISinger");
-const adminApiSong = require("./songs/AdminApiUser");
+const adminApiSong = require("./songs/AdminApiSong");
 const adminApiUser = require("./user/AdminApiUser");
 
 const router = express.Router();

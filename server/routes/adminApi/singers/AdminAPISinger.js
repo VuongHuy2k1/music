@@ -36,11 +36,11 @@ class AdminAPISinger {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Invalid ID"));
       }
-      const singer = await Singer.findOne({ id: req.params.id });
+      const singer = await Singer.findById(req.params.id);
       if (!singer) {
         return res.status(404).json({ message: "Singer not found" });
       }
-      return res.json(responseSuccessDetails({ singer: singer }));
+      return res.json(responseSuccessDetails(singer));
     } catch (err) {
       return res.json(responseError(err));
     }
@@ -175,7 +175,7 @@ const adminAPISinger = new AdminAPISinger();
 // Define routes for the AdminAPISinger API
 router.get("/", adminAPISinger.getAllSinger);
 router.get("/:id", adminAPISinger.getSinger);
-router.post("/create", adminAPISinger.store);
+router.post("/new", adminAPISinger.store);
 router.put("/update/:id", adminAPISinger.update);
 router.delete("/soft-delete/:id", adminAPISinger.destroy);
 router.get("/bin", adminAPISinger.singerBin);

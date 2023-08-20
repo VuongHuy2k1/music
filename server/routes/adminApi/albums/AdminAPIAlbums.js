@@ -149,7 +149,7 @@ const adminAPIAlbums = new AdminAPIAlbums();
 // Define routes for the AlbumController API
 router.get("/", adminAPIAlbums.getAllAlbums);
 router.get("/:id", adminAPIAlbums.getAlbum);
-router.post("/create", adminAPIAlbums.newAlbum);
+router.post("/new", adminAPIAlbums.newAlbum);
 router.put("/update/:id", adminAPIAlbums.updateAlbum);
 router.delete("/soft-delete/:id", adminAPIAlbums.deleteAlbum);
 // router.get("/destroy/:id", adminAPIAlbums.destroy);

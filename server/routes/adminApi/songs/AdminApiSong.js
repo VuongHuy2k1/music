@@ -32,7 +32,7 @@ class AdminAPISongs {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Invalid ID"));
       }
-      const song = await Song.findOne({ id: req.params.id });
+      const song = await Song.findById(req.params.id);
       return res.json(responseSuccessDetails(song));
     } catch (err) {
       return res.json(responseError(err));
@@ -145,7 +145,7 @@ const adminAPISongs = new AdminAPISongs();
 // Define routes for the API
 router.get("/", adminAPISongs.index);
 router.get("/:id", adminAPISongs.show);
-router.post("/create", adminAPISongs.store);
+router.post("/new", adminAPISongs.store);
 router.patch("/update/:id", adminAPISongs.update);
 router.delete("/soft-delete/:id", adminAPISongs.destroy);
 router.delete("/force/:id", adminAPISongs.forceDestroy);

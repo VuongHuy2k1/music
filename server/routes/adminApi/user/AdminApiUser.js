@@ -30,6 +30,20 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+router.get("/:id", async (req, res, next) => {
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.json(responseError("Invalid ID"));
+    }
+
+    const user = await User.findById(req.params.id);
+
+    return res.json(responseSuccessDetails(user));
+  } catch (err) {
+    return res.json(responseError(err));
+  }
+});
+
 // [POST] route /user/login
 router.post("/login", async (req, res, next) => {
   try {
@@ -110,15 +124,14 @@ router.get("/bin", async (req, res, next) => {
 });
 
 // [GET] route /user/edit/:id
-router.get("/edit/:id", async (req, res, next) => {
+router.put("/edit/:id", async (req, res, next) => {
   try {
     if (!isValidObjectId(req.params.id)) {
       return res.json(responseError("Invalid ID"));
     }
-    const user = await User.findById(req.params.id);
-    res.json({
-      user,
-    });
+    await User.updateOne({ _id: req.params.id }, req.body);
+
+    res.json(responseSuccessDetails("Update success"));
   } catch (err) {
     return res.json(responseError(err));
   }
