@@ -1,10 +1,16 @@
 const admin = require("./adminLocal");
 const adminAPIA = require("./adminApi");
 const api = require("./api");
+const login = require("../routes/adminApi/Authorization/index");
 // test api
 const { responseSuccessDetails, responseError } = require("../util/response");
 const { isValidObjectId } = require("mongoose");
 const Song = require("../models/Song");
+const User = require("../models/User");
+const Bill = require("../models/Bill");
+const Package = require("../models/Package");
+const Singer = require("../models/Singer");
+const tokenValidate = require("../validations/tokenValidate");
 
 function route(app) {
   app.use(function (req, res, next) {
@@ -20,7 +26,9 @@ function route(app) {
 
   app.use("/admin", admin);
 
-  app.use("/admin-api", adminAPIA);
+  app.use("/admin-api", tokenValidate, adminAPIA);
+
+  app.use("/admin-login", login);
 
   app.use("/test/:param", async function (req, res, next) {
     try {
@@ -41,7 +49,6 @@ function route(app) {
       }
     } catch (error) {
       console.error("Error:", error);
-
       return res.status(500).json(responseError("Internal server error"));
     }
   });

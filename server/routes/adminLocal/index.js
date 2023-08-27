@@ -1,5 +1,5 @@
 const express = require("express");
-const verifyToken = require("../../middlewares/verifyToken");
+const verifyToken = require("../../middlewares/verifyTokenLocal");
 
 const musicRouter = require("./music");
 const sitesRouter = require("./site");
@@ -10,7 +10,7 @@ const userRouter = require("./user");
 
 const router = express.Router();
 
-router.use("/user",  userRouter);
+router.use("/user", userRouter);
 
 router.use("/album", verifyToken, albumRouter);
 

@@ -56,12 +56,12 @@ router.post("/login", async (req, res, next) => {
 
     const user = await User.findOne({ username });
     if (!user) {
-      return res.json(responseError("Tên đăng nhập hoặc mật khẩu sai!"));
+      return res.json(responseError("Wrong username or password!"));
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.json(responseError("Not valid1"));
+      return res.json(responseError("Wrong username or password!"));
     }
 
     const role = user.role;
@@ -72,12 +72,12 @@ router.post("/login", async (req, res, next) => {
       });
       return res.json(
         responseSuccessDetails({
-          user,
+          admin: user,
           token,
         })
       );
     } else {
-      return res.json(responseError("Not admin"));
+      return res.json(responseError("You are not admin!"));
     }
   } catch (err) {
     return res.json(responseError(err));
@@ -131,9 +131,34 @@ router.put("/edit/:id", async (req, res, next) => {
     }
     await User.updateOne({ _id: req.params.id }, req.body);
 
-    res.json(responseSuccessDetails("Update success"));
+    return res.json(responseSuccessDetails("Update success"));
   } catch (err) {
     return res.json(responseError(err));
+  }
+});
+
+router.get("/auth/:token", (req, res) => {
+  try {
+    const token = req.params.token;
+
+    if (!token) return res.json(responseError("Token not found", 401));
+
+    const verified = jwt.verify(token, process.env.TOKEN_SECRET);
+    const userId = verified._id;
+
+    if (!isValidObjectId(userId)) {
+      return res.json(responseError("Invalid ID"));
+    }
+
+    User.findById({ _id: userId }, { password: 0 }).then((user) => {
+      if (!user) {
+        return res.json(responseError("User not found", 401));
+      }
+      return res.json(responseSuccessDetails(user));
+    });
+  } catch (err) {
+    console.error("Error:", err);
+    return res.json(responseError("Internal server error", 500));
   }
 });
 

@@ -5,25 +5,26 @@ const mongooseDelete = require("mongoose-delete");
 
 const userSchema = new Schema(
   {
-    username: {
+    username: { type: String, required: true },
+    email: { type: String },
+    password: { type: String, required: true },
+    name: { type: String },
+    img: {
       type: String,
-      required: true,
+      default: "https://cdn-icons-png.flaticon.com/512/1077/1077114.png",
     },
-    email: {
-      type: String,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    name: {
-      type: String,
-    },
-    img: { type: String },
     gender: { type: String },
     dateOfBirth: { type: Date },
     nation: { type: String },
-    role: { type: String, default: "" },
+    role: { type: String, default: "basic" },
+
+    // ++packet
+    beginPay: { type: Date },
+    endPay: { type: Date },
+    package: { type: String, default: "" },
+    priority: { type: String },
+    // --packet
+
     lastList: { type: String, default: "" },
     typeList: { type: String, default: "" },
     lastSong: { type: String, default: "" },
