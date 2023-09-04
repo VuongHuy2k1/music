@@ -146,11 +146,11 @@ const adminAPISongs = new AdminAPISongs();
 router.get("/", adminAPISongs.index);
 router.get("/:id", adminAPISongs.show);
 router.post("/new", adminAPISongs.store);
-router.patch("/update/:id", adminAPISongs.update);
+router.put("/update/:id", adminAPISongs.update);
 router.delete("/soft-delete/:id", adminAPISongs.destroy);
 router.delete("/force/:id", adminAPISongs.forceDestroy);
 router.get("/bin", adminAPISongs.songBin);
-router.patch("/restore/:id", adminAPISongs.restore);
+router.put("/restore/:id", adminAPISongs.restore);
 router.post("/multi-action", adminAPISongs.handleFormAction);
 
 module.exports = router;
