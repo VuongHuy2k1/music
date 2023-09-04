@@ -2,6 +2,10 @@ const Playlist = require("../../../models/PlayList");
 const path = require("path");
 const Resize = require("../../../middlewares/Resize");
 const { isValidObjectId } = require("mongoose");
+const {
+  responseError,
+  responseSuccessDetails,
+} = require("../../../util/response");
 
 module.exports = async (req, res) => {
   try {
@@ -9,7 +13,7 @@ module.exports = async (req, res) => {
     const name = req.body.name;
 
     if (!playlistId || !isValidObjectId(playlistId)) {
-      return res.json(responseError("Playlist ID is wrong format", 400));
+      return res.json(responseError("Playlist ID is wrong format"));
     }
 
     const imagePath = path.join("test/public/img");
