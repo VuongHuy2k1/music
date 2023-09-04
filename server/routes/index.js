@@ -26,7 +26,7 @@ function route(app) {
 
   app.use("/admin", admin);
 
-  app.use("/admin-api", tokenValidate, adminAPIA);
+  app.use("/admin-api", adminAPIA);
 
   app.use("/admin-login", login);
 
