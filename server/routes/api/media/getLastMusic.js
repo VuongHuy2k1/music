@@ -7,12 +7,13 @@ const {
   responseError,
   responseSuccessDetails,
 } = require("../../../util/response");
+const { isValidObjectId } = require("mongoose");
 
 module.exports = async function (req, res, next) {
   try {
     const userId = req.params.userId;
 
-    if (!userId) {
+    if (!isValidObjectId(userId)) {
       return res.status(400).send("Invalid user ID");
     }
 
