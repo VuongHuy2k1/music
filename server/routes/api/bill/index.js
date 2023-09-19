@@ -61,9 +61,21 @@ class BillApi {
 
       const bill = new Bill(data);
 
+      const currentDate = new Date();
+
+      let newMonth = currentDate.getMonth() + packages.duration;
+      let newYear = currentDate.getFullYear();
+
+      if (newMonth > 11) {
+        newYear = newYear + 1;
+        newMonth -= 12;
+      }
+
       user.priority = packages.priority;
       user.beginPay = new Date();
-      user.endPay = data.endPay;
+      user.endPay = data.endPay
+        ? new Date(data.endPay)
+        : new Date(new Date(newYear, newMonth, currentDate.getDate()));
       user.package = packages.name;
 
       bill.isUsed = data.isUsed || false;
