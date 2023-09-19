@@ -28,6 +28,7 @@ const userSchema = new Schema(
     lastList: { type: String, default: "" },
     typeList: { type: String, default: "" },
     lastSong: { type: String, default: "" },
+    code: { type: String, default: "" },
   },
   { timestamps: true }
 );

@@ -27,7 +27,7 @@ module.exports = async (req, res, next) => {
     }
 
     const role = user.role;
-    if (role === "admin") {
+    if (role === "admin" || role === "superAdmin") {
       const id = user._id;
       const token = jwt.sign({ _id: id }, process.env.TOKEN_SECRET, {
         expiresIn: "1d",
@@ -36,6 +36,7 @@ module.exports = async (req, res, next) => {
         responseSuccessDetails({
           admin: user,
           token,
+          k,
         })
       );
     } else {

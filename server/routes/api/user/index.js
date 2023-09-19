@@ -10,6 +10,12 @@ const {
   responseSuccessDetails,
   responseError,
 } = require("../../../util/response");
+const { isValidObjectId } = require("mongoose");
+
+const nodemailer = require("nodemailer");
+require("dotenv").config();
+const { google } = require("googleapis");
+const OAuth2 = google.auth.OAuth2;
 
 const router = express.Router();
 
@@ -38,10 +44,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign({ _id: id }, process.env.TOKEN_SECRET, {
       expiresIn: 60 * 60 * 24,
     });
-    // .cookie("access_token", token, { httpOnly: true, sameSite: true })
-    // .header({
-    //   username: user.username,
-    // })
+
     return res.json(
       responseSuccessDetails({
         userId: id,
@@ -58,7 +61,7 @@ router.post("/login", async (req, res) => {
 
 router.post("/signup", async (req, res, next) => {
   try {
-    const { username } = req.body;
+    const { username, email } = req.body;
     const { isValid, errors } = signupValidator(req.body);
 
     if (!isValid) {
@@ -66,9 +69,12 @@ router.post("/signup", async (req, res, next) => {
     }
 
     const existingUser = await User.findOne({ username });
+    const existingEmail = await User.findOne({ email });
 
-    if (existingUser) {
-      return res.json(responseError("Username is already taken", 422));
+    if (existingUser || existingEmail) {
+      return res.json(
+        responseError("Username or email is already registered", 422)
+      );
     }
 
     const user = new User(req.body);
@@ -79,12 +85,6 @@ router.post("/signup", async (req, res, next) => {
 
     return res.json(responseError("Internal server error", 500));
   }
-});
-
-router.get("/logout", (req, res) => {
-  return res
-    .clearCookie("access_token")
-    .json({ user: { username: "" }, isAuthenticated: false });
 });
 
 router.get("/authen/:token", (req, res) => {
@@ -103,6 +103,117 @@ router.get("/authen/:token", (req, res) => {
     });
   } catch (err) {
     console.error("Error:", err);
+    return res.json(responseError("Internal server error", 500));
+  }
+});
+
+router.get("/reset-password/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    if (!isValidObjectId(userId)) {
+      return res.json(responseError({ message: "Invalid user ID" }));
+    }
+
+    const user = await User.findById(userId);
+
+    if (user) {
+      const chars = generateRandomString(6);
+      user.code = chars;
+      await user.save();
+      // send mail
+      const mailOptions = {
+        from: process.env.ADMIN_MAIL,
+        to: userEmail,
+        subject: "Test",
+        text: "You received message from HuTa Music",
+        html:
+          "<p>You have got a new message</b><ul><li>Username:" +
+          user.username +
+          "</li><li>Your code is:" +
+          user.code +
+          "</li></ul>",
+      };
+
+      let emailTransporter = await createTransporter();
+      await emailTransporter.sendMail(mailOptions);
+      // end send mail
+      return res.json(responseSuccessDetails(user.code));
+    }
+    return res.json(responseError("User not found!"));
+  } catch (err) {
+    console.error("Error:", err);
+
+    return res.json(responseError("Internal server error", 500));
+  }
+});
+
+function generateRandomString(length) {
+  const characters =
+    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let result = "";
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * charactersLength);
+    result += characters.charAt(randomIndex);
+  }
+  return result;
+}
+
+const oauth2Client = new OAuth2(
+  process.env.CLIENT_ID,
+  process.env.CLIENT_SECRET,
+  "https://developers.google.com/oauthplayground"
+);
+
+oauth2Client.setCredentials({
+  refresh_token: process.env.REFRESH_TOKEN,
+});
+
+async function createTransporter() {
+  try {
+    const accessToken = await oauth2Client.getAccessToken();
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        type: "OAuth2",
+        user: process.env.ADMIN_MAIL,
+        accessToken,
+        clientId: process.env.CLIENT_ID,
+        clientSecret: process.env.CLIENT_SECRET,
+        refreshToken: process.env.REFRESH_TOKEN,
+      },
+    });
+
+    return transporter;
+  } catch (err) {
+    return err;
+  }
+}
+
+router.get("/verify-reset-password", async (req, res) => {
+  try {
+    const { code, userEmail } = req.body;
+
+    const user = await User.findOne({ email: userEmail });
+
+    if (user) {
+      let today = new Date();
+      const date1 = new Date(user.updatedAt);
+      const date2 = today;
+      const timeDifference = date2.getTime() - date1.getTime();
+      const minutesDifference = timeDifference / (1000 * 60);
+      if (user.code === code && minutesDifference < 5) {
+        user.code = "";
+        await user.save();
+        return res.json(responseSuccessDetails(user));
+      } else {
+        return res.json(responseError("Code has wrong or expired"));
+      }
+    } else {
+      return res.json(responseError("User not found"));
+    }
+  } catch (err) {
     return res.json(responseError("Internal server error", 500));
   }
 });

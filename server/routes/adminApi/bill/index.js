@@ -59,12 +59,14 @@ class BillApi {
         return res.json(responseError("User or package not founded!!!"));
       }
 
+      data.packageName = package2.name;
+
       const bill = new Bill(data);
       await bill.save();
 
       return res.json(responseSuccessDetails(bill));
     } catch (err) {
-      return res.json(responseError(err));
+      return res.json(responseError("ERR"));
     }
   }
 

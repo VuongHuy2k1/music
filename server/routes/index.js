@@ -2,7 +2,6 @@ const admin = require("./adminLocal");
 const adminAPIA = require("./adminApi");
 const api = require("./api");
 const login = require("../routes/adminApi/Authorization/index");
-// test api
 const { responseSuccessDetails, responseError } = require("../util/response");
 const { isValidObjectId } = require("mongoose");
 const Song = require("../models/Song");
@@ -26,7 +25,7 @@ function route(app) {
 
   app.use("/admin", admin);
 
-  app.use("/admin-api", adminAPIA);
+  app.use("/admin-api", tokenValidate, adminAPIA);
 
   app.use("/admin-login", login);
 
@@ -37,8 +36,8 @@ function route(app) {
       if (isValidObjectId(param)) {
         const song = await Song.findById(param);
         song.viewsLast24Hours = [
-          1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3,
-          4,
+          3, 5, 7, 2, 1, 7, 2, 4, 7, 2, 3, 4, 8, 1, 9, 2, 6, 5, 2, 5, 2, 7, 2,
+          2,
         ];
         song.viewsDay = 100;
         song.lastViewDate = today;

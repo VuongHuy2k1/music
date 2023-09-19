@@ -2,33 +2,37 @@ const Validator = require("validator");
 const { isEmpty } = require("../util");
 
 module.exports = function validateInput(data) {
-  let errors = {};
+  let errors = "";
 
   if (Validator.isEmpty(data.username || "")) {
-    errors.username = "Username is required";
+    errors = "Username is required";
+  }
+
+  if (Validator.isEmail(data.email || "")) {
+    errors = "Email is not valid";
   }
 
   if (!Validator.isAlphanumeric(data.username || "")) {
-    errors.username = "Username must be alphanumeric";
+    errors = "Username must be alphanumeric";
   }
 
   if (!Validator.isLength(data.username, { min: 3, max: 16 })) {
-    errors.username = "Username must be between 3 and 16 characters";
+    errors = "Username must be between 3 and 16 characters";
   }
 
   if (Validator.isEmpty(data.password || "")) {
-    errors.password = "Password is required";
+    errors = "Password is required";
   }
 
   if (!Validator.isLength(data.password, { min: 6, max: undefined })) {
-    errors.password = "Password must be at least 6 characters";
+    errors = "Password must be at least 6 characters";
   }
 
   if (Validator.isEmpty(data.rePassword || "")) {
-    errors.rePassword = "Password confirmation is required";
+    errors = "Password confirmation is required";
   }
   if (!Validator.equals(data.password, data.rePassword)) {
-    errors.rePassword = "Passwords must match";
+    errors = "Passwords must match";
   }
 
   return {

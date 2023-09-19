@@ -35,9 +35,7 @@ router.get("/:id", async (req, res, next) => {
     if (!isValidObjectId(req.params.id)) {
       return res.json(responseError("Invalid ID"));
     }
-
     const user = await User.findById(req.params.id);
-
     return res.json(responseSuccessDetails(user));
   } catch (err) {
     return res.json(responseError(err));
@@ -132,6 +130,38 @@ router.put("/edit/:id", async (req, res, next) => {
     await User.updateOne({ _id: req.params.id }, req.body);
 
     return res.json(responseSuccessDetails("Update success"));
+  } catch (err) {
+    return res.json(responseError(err));
+  }
+});
+
+router.delete("/:id", async (req, res, next) => {
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.json(responseError("Invalid ID"));
+    }
+    // user to delete
+    const user = await User.findById(req.params.id);
+
+    // role of current admin
+    const admin = req.user.role;
+
+    if (
+      (admin.role === "admin" || admin.role === "superAdmin") &&
+      user.role != "admin"
+    ) {
+      await User.delete({ _id: req.params.id });
+      return res.json(responseSuccessDetails("Delete user successfully!"));
+    } else if (user.role === "admin" && admin.role === "superAdmin") {
+      await User.delete({ _id: req.params.id });
+      return res.json(responseSuccessDetails("Delete user successfully!"));
+    } else if (user.role === "superAdmin") {
+      return res.json(responseError("This account can't be delete!"));
+    } else {
+      return res.json(
+        responseError("Your role does not have enough authority!")
+      );
+    }
   } catch (err) {
     return res.json(responseError(err));
   }

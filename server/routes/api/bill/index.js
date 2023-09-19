@@ -52,15 +52,25 @@ class BillApi {
       if (!isValidObjectId(data.userId) || !isValidObjectId(data.packageId)) {
         return res.json(responseError("Id not valid"));
       }
-      const user = await User.findById(req.params.id);
-      const packages = await Package.findById(req.params.id);
+      const user = await User.findById(data.userId);
+      const packages = await Package.findById(data.packageId);
 
       if (!user || !packages) {
         return res.json(responseError("User or package not founded!!!"));
       }
 
       const bill = new Bill(data);
+
+      user.priority = packages.priority;
+      user.beginPay = new Date();
+      user.endPay = data.endPay;
+      user.package = packages.name;
+
+      bill.isUsed = data.isUsed || false;
+      bill.isPaid = data.isPaid || false;
+      console.log(data);
       await bill.save();
+      await user.save();
 
       return res.json(responseSuccessDetails("Bill created successfully"));
     } catch (err) {
@@ -91,18 +101,16 @@ class BillApi {
 
       if (data.isPaid) {
         if (data.type === "use") {
-          user.role = packages.name;
           user.priority = packages.priority;
           user.beginPay = new Date();
           user.endPay = data.endPay;
-          user.packet = packages.name;
+          user.package = packages.name;
           bill.isUsed = true;
         } else if (data.type === "code") {
           if (!isValidObjectId(data.code)) {
             return res.json(responseError("Id not valid"));
           }
           const code = await Package.findById(data.packageId);
-
           if (code) {
             user.role = code.name;
             user.priority = code.priority;
@@ -115,12 +123,9 @@ class BillApi {
           }
         }
 
-        const [userSave, updateBill] = await Promise.all([
-          user.save(),
-          bill.save(),
-        ]);
+        await Promise.all([user.save(), bill.save()]);
 
-        return res.json(responseSuccessDetails(updateBill));
+        return res.json(responseSuccessDetails(bill));
       } else {
         return res.json(responseError("Bill has not been paid"));
       }
