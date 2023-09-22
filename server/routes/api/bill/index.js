@@ -80,7 +80,6 @@ class BillApi {
 
       bill.isUsed = data.isUsed || false;
       bill.isPaid = data.isPaid || false;
-      console.log(data);
       await bill.save();
       await user.save();
 

