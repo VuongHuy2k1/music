@@ -8,7 +8,7 @@ module.exports = function validateInput(data) {
     errors = "Username is required";
   }
 
-  if (Validator.isEmail(data.email || "")) {
+  if (!Validator.isEmail(data.email || "")) {
     errors = "Email is not valid";
   }
 

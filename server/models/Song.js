@@ -10,9 +10,7 @@ const Song = new Schema(
     img: { type: String },
     url: { type: String },
     singer: { type: String },
-    //++new
     priority: { type: String },
-    //--new
     album: { type: String },
     legion: { type: String },
     views: { type: Number, default: 0 },
