@@ -6,7 +6,7 @@ const mongooseDelete = require("mongoose-delete");
 const userSchema = new Schema(
   {
     username: { type: String, required: true },
-    email: { type: String },
+    email: { type: String, required: true },
     password: { type: String, required: true },
     name: { type: String },
     img: {
@@ -22,7 +22,7 @@ const userSchema = new Schema(
     beginPay: { type: Date },
     endPay: { type: Date },
     package: { type: String, default: "" },
-    priority: { type: String },
+    priority: { type: String, default: "basic" },
     // --packet
 
     lastList: { type: String, default: "" },

@@ -10,6 +10,7 @@ const loginValidator = require("../../../validations/login");
 module.exports = async (req, res, next) => {
   try {
     const { username, password } = req.body;
+
     const { isValid, errors } = loginValidator(req.body);
 
     if (!isValid) {
@@ -17,6 +18,7 @@ module.exports = async (req, res, next) => {
     }
 
     const user = await User.findOne({ username });
+
     if (!user) {
       return res.json(responseError("Wrong username or password!"));
     }
@@ -36,7 +38,6 @@ module.exports = async (req, res, next) => {
         responseSuccessDetails({
           admin: user,
           token,
-          k,
         })
       );
     } else {
