@@ -5,28 +5,30 @@ const mongooseDelete = require("mongoose-delete");
 
 const userSchema = new Schema(
   {
-    username: {
+    username: { type: String, required: true },
+    email: { type: String, required: true },
+    password: { type: String, required: true },
+    name: { type: String },
+    img: {
       type: String,
-      required: true,
+      default: "https://cdn-icons-png.flaticon.com/512/1077/1077114.png",
     },
-    email: {
-      type: String,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    name: {
-      type: String,
-    },
-    img: { type: String },
     gender: { type: String },
     dateOfBirth: { type: Date },
     nation: { type: String },
-    role: { type: String, default: "" },
+    role: { type: String, default: "basic" },
+
+    // ++packet
+    beginPay: { type: Date },
+    endPay: { type: Date },
+    package: { type: String, default: "" },
+    priority: { type: String, default: "basic" },
+    // --packet
+
     lastList: { type: String, default: "" },
     typeList: { type: String, default: "" },
     lastSong: { type: String, default: "" },
+    code: { type: String, default: "" },
   },
   { timestamps: true }
 );
@@ -38,14 +40,16 @@ userSchema.plugin(mongooseDelete, {
 
 userSchema.pre("save", function (next) {
   const user = this;
-  bcrypt.genSalt(10, (err, salt) => {
-    if (err) return next(err);
-    bcrypt.hash(user.password, salt, (err, hash) => {
+  if (user.password || user.rePassword) {
+    bcrypt.genSalt(10, (err, salt) => {
       if (err) return next(err);
-      user.password = hash;
-      next();
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        if (err) return next(err);
+        user.password = hash;
+        next();
+      });
     });
-  });
+  }
 });
 
 userSchema.methods.comparePassword = function (candidatePassword) {

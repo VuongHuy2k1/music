@@ -1,5 +1,6 @@
 const User = require("../../../models/User");
 const Song = require("../../../models/Song");
+const { isValidObjectId } = require("mongoose");
 
 module.exports = (req, res, next) => {
   const id = req.params.userId;
@@ -9,7 +10,7 @@ module.exports = (req, res, next) => {
   const lastSinger = req.body.singerName;
   const lastAlbum = req.body.albumName;
 
-  if (id) {
+  if (isValidObjectId(id)) {
     if (lastAlbum) {
       const typeList = "Album";
       User.updateOne(

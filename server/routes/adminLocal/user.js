@@ -1,5 +1,5 @@
 const express = require("express");
-const verifyToken = require("../../middlewares/verifyToken");
+const verifyToken = require("../../middlewares/verifyTokenLocal");
 const updateInfo = require("./updateInfoUser");
 const upload = require("../../middlewares/uploadMiddleware");
 

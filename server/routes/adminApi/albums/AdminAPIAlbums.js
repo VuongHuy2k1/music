@@ -16,7 +16,7 @@ class AdminAPIAlbums {
         Album.find({}),
         Album.countDocumentsDeleted(),
       ]);
-      res.json(
+      return res.json(
         responseSuccessDetails({
           deletedCount,
           albums: albums,
@@ -38,7 +38,7 @@ class AdminAPIAlbums {
         return res.status(404).json({ message: "Album not found" });
       }
 
-      res.json(responseSuccessDetails(album));
+      return res.json(responseSuccessDetails(album));
     } catch (err) {
       return res.json(responseError(err));
     }
@@ -61,7 +61,7 @@ class AdminAPIAlbums {
       const album = new Album(formData);
       await album.save();
 
-      res.json(responseSuccessDetails("Album created successfully"));
+      return res.json(responseSuccessDetails("Album created successfully"));
     } catch (err) {
       return res.json(responseError(err));
     }
@@ -82,7 +82,7 @@ class AdminAPIAlbums {
       });
 
       await Album.updateOne({ _id: req.params.id }, formData);
-      res.json(responseSuccessDetails("Album updated successfully"));
+      return res.json(responseSuccessDetails("Album updated successfully"));
     } catch (err) {
       return res.json(responseError(err));
     }
@@ -95,7 +95,7 @@ class AdminAPIAlbums {
         return res.json(responseError("Id not valid"));
       }
       await Album.deleteOne({ _id: req.params.id });
-      res.json(responseSuccessDetails("Album deleted successfully"));
+      return res.json(responseSuccessDetails("Album deleted successfully"));
     } catch (err) {
       return res.json(responseError(err));
     }
@@ -108,7 +108,7 @@ class AdminAPIAlbums {
         return res.json(responseError("Id not valid"));
       }
       const albums = await Album.findDeleted({});
-      res.json(responseSuccessDetails(albums));
+      return res.json(responseSuccessDetails(albums));
     } catch (err) {
       return res.json(responseError(err));
     }
@@ -121,7 +121,7 @@ class AdminAPIAlbums {
         return res.json(responseError("Id not valid"));
       }
       await Album.restore({ _id: req.params.id });
-      res.json(responseSuccessDetails("Album restored successfully"));
+      return res.json(responseSuccessDetails("Album restored successfully"));
     } catch (err) {
       return res.json(responseError(err));
     }
@@ -133,10 +133,12 @@ class AdminAPIAlbums {
       switch (req.body.actionName) {
         case "delete":
           await Album.deleteMany({ _id: { $in: req.body.albumIDs } });
-          res.json(responseSuccessDetails("Albums deleted successfully"));
+          return res.json(
+            responseSuccessDetails("Albums deleted successfully")
+          );
           break;
         default:
-          res.json(responseSuccessDetails("Invalid action"));
+          return res.json(responseSuccessDetails("Invalid action"));
       }
     } catch (err) {
       return res.json(responseError(err));

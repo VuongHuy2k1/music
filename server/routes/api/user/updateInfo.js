@@ -19,13 +19,13 @@ module.exports = async function (req, res) {
     const verified = jwt.verify(token, process.env.TOKEN_SECRET);
     const userId = verified._id;
 
-    const { email, name, gender, nation, dateOfBirth } = req.body;
+    const { name, gender, nation, dateOfBirth, fileLink } = req.body;
 
     if (req.file && isValidObjectId(userId)) {
       const filename = await fileUpload.save(req.file.buffer);
       await User.updateOne(
         { _id: userId },
-        { email, name, gender, dateOfBirth, nation, img: filename }
+        { name, gender, dateOfBirth, nation, img: filename || fileLink }
       );
     } else {
       await User.updateOne(

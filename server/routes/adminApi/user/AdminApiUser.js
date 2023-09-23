@@ -7,7 +7,6 @@ const {
   responseError,
   responseSuccessDetails,
 } = require("../../../util/response");
-const loginValidator = require("../../../validations/login");
 const signupValidator = require("../../../validations/signup");
 
 const router = express.Router();
@@ -35,50 +34,8 @@ router.get("/:id", async (req, res, next) => {
     if (!isValidObjectId(req.params.id)) {
       return res.json(responseError("Invalid ID"));
     }
-
     const user = await User.findById(req.params.id);
-
     return res.json(responseSuccessDetails(user));
-  } catch (err) {
-    return res.json(responseError(err));
-  }
-});
-
-// [POST] route /user/login
-router.post("/login", async (req, res, next) => {
-  try {
-    const { username, password } = req.body;
-    const { isValid, errors } = loginValidator(req.body);
-
-    if (!isValid) {
-      return res.json(responseError(errors));
-    }
-
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.json(responseError("Tên đăng nhập hoặc mật khẩu sai!"));
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.json(responseError("Not valid1"));
-    }
-
-    const role = user.role;
-    if (role === "admin") {
-      const id = user._id;
-      const token = jwt.sign({ _id: id }, process.env.TOKEN_SECRET, {
-        expiresIn: "1d",
-      });
-      return res.json(
-        responseSuccessDetails({
-          user,
-          token,
-        })
-      );
-    } else {
-      return res.json(responseError("Not admin"));
-    }
   } catch (err) {
     return res.json(responseError(err));
   }
@@ -101,6 +58,7 @@ router.post("/signup", async (req, res, next) => {
     }
 
     const user = new User(req.body);
+    user.role = "user";
     await user.save();
 
     return res.json(responseSuccessDetails(user));
@@ -129,11 +87,86 @@ router.put("/edit/:id", async (req, res, next) => {
     if (!isValidObjectId(req.params.id)) {
       return res.json(responseError("Invalid ID"));
     }
-    await User.updateOne({ _id: req.params.id }, req.body);
 
-    res.json(responseSuccessDetails("Update success"));
+    const user = User.findById(req.params.id);
+    // role of current admin
+    const admin = req.user;
+
+    if (
+      (admin.role === "admin" || admin.role === "superAdmin") &&
+      user.role != "admin"
+    ) {
+      await User.updateOne({ _id: req.params.id }, req.body);
+      return res.json(responseSuccessDetails("Update success"));
+    } else if (user.role === "admin" && admin.role === "superAdmin") {
+      await User.updateOne({ _id: req.params.id }, req.body);
+      return res.json(responseSuccessDetails("Update success"));
+    } else if (user.role === "superAdmin") {
+      return res.json(responseError("This account can't be delete!"));
+    } else {
+      return res.json(
+        responseError("Your role does not have enough authority!")
+      );
+    }
   } catch (err) {
     return res.json(responseError(err));
+  }
+});
+
+router.delete("/:id", async (req, res, next) => {
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.json(responseError("Invalid ID"));
+    }
+    // user to delete
+    const user = await User.findById(req.params.id);
+
+    // role of current admin
+    const admin = req.user;
+
+    if (
+      (admin.role === "admin" || admin.role === "superAdmin") &&
+      user.role != "admin"
+    ) {
+      await User.delete({ _id: req.params.id });
+      return res.json(responseSuccessDetails("Delete user successfully!"));
+    } else if (user.role === "admin" && admin.role === "superAdmin") {
+      await User.delete({ _id: req.params.id });
+      return res.json(responseSuccessDetails("Delete user successfully!"));
+    } else if (user.role === "superAdmin") {
+      return res.json(responseError("This account can't be delete!"));
+    } else {
+      return res.json(
+        responseError("Your role does not have enough authority!")
+      );
+    }
+  } catch (err) {
+    return res.json(responseError(err));
+  }
+});
+
+router.get("/auth/:token", (req, res) => {
+  try {
+    const token = req.params.token;
+
+    if (!token) return res.json(responseError("Token not found", 401));
+
+    const verified = jwt.verify(token, process.env.TOKEN_SECRET);
+    const userId = verified._id;
+
+    if (!isValidObjectId(userId)) {
+      return res.json(responseError("Invalid ID"));
+    }
+
+    User.findById({ _id: userId }, { password: 0 }).then((user) => {
+      if (!user) {
+        return res.json(responseError("User not found", 401));
+      }
+      return res.json(responseSuccessDetails(user));
+    });
+  } catch (err) {
+    console.error("Error:", err);
+    return res.json(responseError("Internal server error", 500));
   }
 });
 

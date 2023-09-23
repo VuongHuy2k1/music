@@ -1,10 +1,15 @@
 const admin = require("./adminLocal");
 const adminAPIA = require("./adminApi");
 const api = require("./api");
-// test api
+const login = require("../routes/adminApi/Authorization/index");
 const { responseSuccessDetails, responseError } = require("../util/response");
 const { isValidObjectId } = require("mongoose");
 const Song = require("../models/Song");
+const User = require("../models/User");
+const Bill = require("../models/Bill");
+const Package = require("../models/Package");
+const Singer = require("../models/Singer");
+const tokenValidate = require("../validations/tokenValidate");
 
 function route(app) {
   app.use(function (req, res, next) {
@@ -20,7 +25,9 @@ function route(app) {
 
   app.use("/admin", admin);
 
-  app.use("/admin-api", adminAPIA);
+  app.use("/admin-api", tokenValidate, adminAPIA);
+
+  app.use("/admin-login", login);
 
   app.use("/test/:param", async function (req, res, next) {
     try {
@@ -29,8 +36,8 @@ function route(app) {
       if (isValidObjectId(param)) {
         const song = await Song.findById(param);
         song.viewsLast24Hours = [
-          1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3,
-          4,
+          3, 5, 7, 2, 1, 7, 2, 4, 7, 2, 3, 4, 8, 1, 9, 2, 6, 5, 2, 5, 2, 7, 2,
+          2,
         ];
         song.viewsDay = 100;
         song.lastViewDate = today;
@@ -41,7 +48,24 @@ function route(app) {
       }
     } catch (error) {
       console.error("Error:", error);
+      return res.status(500).json(responseError("Internal server error"));
+    }
+  });
 
+  app.use("/res/:param", async function (req, res, next) {
+    try {
+      const param = req.params.param;
+
+      if (isValidObjectId(param)) {
+        const user = await User.findById(param);
+        user.password = "111111";
+        await user.save();
+        return res.json(responseSuccessDetails(user));
+      } else {
+        return res.json(responseSuccessDetails("Update success"));
+      }
+    } catch (error) {
+      console.error("Error:", error);
       return res.status(500).json(responseError("Internal server error"));
     }
   });

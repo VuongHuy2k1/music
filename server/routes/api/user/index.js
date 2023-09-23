@@ -10,6 +10,11 @@ const {
   responseSuccessDetails,
   responseError,
 } = require("../../../util/response");
+const { isValidObjectId } = require("mongoose");
+const {
+  createMailTransporter,
+} = require("../../../util/createMailTransporter");
+const { generateRandomString } = require("../../../util/randomChar");
 
 const router = express.Router();
 
@@ -38,10 +43,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign({ _id: id }, process.env.TOKEN_SECRET, {
       expiresIn: 60 * 60 * 24,
     });
-    // .cookie("access_token", token, { httpOnly: true, sameSite: true })
-    // .header({
-    //   username: user.username,
-    // })
+
     return res.json(
       responseSuccessDetails({
         userId: id,
@@ -51,14 +53,13 @@ router.post("/login", async (req, res) => {
     );
   } catch (err) {
     console.error("Error:", err);
-
     return res.json(responseError("Internal server error", 500));
   }
 });
 
 router.post("/signup", async (req, res, next) => {
   try {
-    const { username } = req.body;
+    const { username, email } = req.body;
     const { isValid, errors } = signupValidator(req.body);
 
     if (!isValid) {
@@ -66,28 +67,87 @@ router.post("/signup", async (req, res, next) => {
     }
 
     const existingUser = await User.findOne({ username });
+    const existingEmail = await User.findOne({ email });
 
-    if (existingUser) {
-      return res.json(responseError("Username is already taken", 422));
+    if (existingUser || existingEmail) {
+      return res.json(
+        responseError("Username or email is already registered", 422)
+      );
     }
 
+    const chars = generateRandomString(6);
+
     const user = new User(req.body);
+
+    user.role = "basic";
+    user.code = chars;
+
     await user.save();
-    return res.json(responseSuccessDetails("Tạo tài khoản thành công"));
+
+    const mailOptions = {
+      from: process.env.ADMIN_MAIL,
+      to: email,
+      subject: "You received message from HuTa Music",
+      text: "You received message from HuTa Music",
+      html:
+        "<h1><b>You received message from HuTa Music</b></h1>Hi user: <b>" +
+        user.username +
+        "</b><p>" +
+        "<p>It looks like you're trying to sign in to out website.<p>" +
+        "<p>The Huta Guard code you need to log into your account:<p>" +
+        "<p>Your code is :<p>" +
+        "<b>" +
+        user.code +
+        "</b><br>" +
+        "<p>The code only lasts for 5 minutes, please enter the code now.<p>" +
+        "<p>From HuTa Music web</p>",
+    };
+
+    let emailTransporter = await createMailTransporter();
+
+    await emailTransporter.sendMail(mailOptions);
+
+    return res.json(responseSuccessDetails("Account successfully created"));
   } catch (err) {
     console.error("Error:", err);
-
     return res.json(responseError("Internal server error", 500));
   }
 });
 
-router.get("/logout", (req, res) => {
-  return res
-    .clearCookie("access_token")
-    .json({ user: { username: "" }, isAuthenticated: false });
+router.get("/verify-mail", async (req, res) => {
+  try {
+    const { code, userEmail } = req.body;
+
+    const user = await User.findOne({ email: userEmail });
+
+    if (user) {
+      let today = new Date();
+      const date1 = new Date(user.updatedAt);
+      const date2 = today;
+      const timeDifference = date2.getTime() - date1.getTime();
+      const minutesDifference = timeDifference / (1000 * 60);
+      if (
+        user.code === code &&
+        minutesDifference < 5 &&
+        code != "" &&
+        user.code != ""
+      ) {
+        user.role = "user";
+        user.code = "";
+        await user.save();
+        return res.json(responseSuccessDetails(user));
+      } else {
+        return res.json(responseError("Code has wrong or expired"));
+      }
+    } else {
+      return res.json(responseError("User not found"));
+    }
+  } catch (err) {
+    return res.json(responseError("Internal server error", 500));
+  }
 });
 
-router.get("/authen/:token", (req, res) => {
+router.get("/auth/:token", (req, res) => {
   try {
     const token = req.params.token;
 
@@ -103,6 +163,87 @@ router.get("/authen/:token", (req, res) => {
     });
   } catch (err) {
     console.error("Error:", err);
+    return res.json(responseError("Internal server error", 500));
+  }
+});
+
+router.get("/forgot-password", async (req, res) => {
+  try {
+    const { userEmail, username } = req.body;
+
+    const user = await User.findOne({ email: userEmail, username: username });
+
+    if (user) {
+      const chars = generateRandomString(6);
+      user.code = chars;
+      await user.save();
+      // send mail
+      const mailOptions = {
+        from: process.env.ADMIN_MAIL,
+        to: userEmail,
+        subject: "You received message from HuTa Music",
+        text: "You received message from HuTa Music",
+        html:
+          "<h1><b>You received message from HuTa Music</b></h1>Hi user: <b>" +
+          user.username +
+          "</b><p>" +
+          "<p>It looks like you're forgot your password.<p>" +
+          "<p>The Huta Guard code you need to log into your account:<p>" +
+          "<p>Your code is :<p>" +
+          "<b>" +
+          user.code +
+          "</b><br>" +
+          "<p>The code only lasts for 5 minutes, please enter the code now.<p>" +
+          "<p>From HuTa Music web</p>",
+      };
+      let emailTransporter = await createMailTransporter();
+      await emailTransporter.sendMail(mailOptions);
+      // end send mail
+      return res.json(responseSuccessDetails(user.code));
+    }
+    return res.json(responseError("User not found!"));
+  } catch (err) {
+    console.error("Error:", err);
+
+    return res.json(responseError("Internal server error", 500));
+  }
+});
+
+router.get("/verify-reset-password", async (req, res) => {
+  try {
+    const { code, userEmail, username, password, rePassword } = req.body;
+
+    const user = await User.findOne({ email: userEmail, username: username });
+
+    if (user) {
+      let today = new Date();
+      const date1 = new Date(user.updatedAt);
+      const date2 = today;
+      const timeDifference = date2.getTime() - date1.getTime();
+      const minutesDifference = timeDifference / (1000 * 60);
+      if (
+        user.code === code &&
+        minutesDifference < 5 &&
+        code != "" &&
+        user.code != ""
+      ) {
+        if (password === rePassword) {
+          user.code = "";
+          user.password = password;
+          await user.save();
+        } else {
+          return res.json(
+            responseError("Password and rePassword not match!!!")
+          );
+        }
+        return res.json(responseSuccessDetails(user));
+      } else {
+        return res.json(responseError("Code has wrong or expired"));
+      }
+    } else {
+      return res.json(responseError("User not found"));
+    }
+  } catch (err) {
     return res.json(responseError("Internal server error", 500));
   }
 });

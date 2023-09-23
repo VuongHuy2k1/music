@@ -7,12 +7,13 @@ const {
   responseError,
   responseSuccessDetails,
 } = require("../../../util/response");
+const { isValidObjectId } = require("mongoose");
 
 module.exports = async function (req, res, next) {
   try {
     const userId = req.params.userId;
 
-    if (!userId) {
+    if (!isValidObjectId(userId)) {
       return res.status(400).send("Invalid user ID");
     }
 
@@ -30,17 +31,15 @@ module.exports = async function (req, res, next) {
     let songList = [];
     switch (user.typeList) {
       case "Album":
-        const album = await Album.findById(lastList);
-        if (!album) {
-          return res.json(responseError("Album not found"));
-        }
-        const albumName = album.name;
-        songList = song.filter((song) => song.album.includes(albumName));
+        songList = song.filter((song) => song.album.includes(lastList));
         break;
       case "Singer":
         songList = song.filter((song) => song.singer.includes(lastList));
         break;
       case "Playlist":
+        if (!isValidObjectId(lastList)) {
+          return res.json(responseError("Invalid ID"));
+        }
         const playlist = await Playlist.findById(lastList);
         if (!playlist) {
           return res.json(responseError("Playlist not found"));
@@ -59,6 +58,6 @@ module.exports = async function (req, res, next) {
     );
   } catch (error) {
     console.error("Error:", error);
-    return res.json(responseError("Internal server error", 500));
+    return res.json(responseError("Internal server error"));
   }
 };
