@@ -21,8 +21,7 @@ module.exports = (req, res, next) => {
     }
 
     const user = await User.findById(_id);
-
-    if (user.role != "admin") {
+    if (user?.role != "admin" && user?.role != "superAdmin") {
       return res.status(401).json(responseError("Unauthorized"));
     }
 

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Bill = require("../../../models/Bill");
 const User = require("../../../models/User");
+const Song = require("../../../models/Song");
 const Package = require("../../../models/Package");
 const {
   responseError,
@@ -14,8 +15,8 @@ class BillApi {
       const today = new Date();
       const year = today.getFullYear();
       const time = Number(req.params.time) || 0;
-      let totalBuy = 0;
-      let buyByMonth = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      let totalRevenue = 0;
+      let revenueByMonth = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
       const paidBills = await Bill.find({ isPaid: true });
       if (time === 0) {
         for (const bill of paidBills) {
@@ -24,10 +25,10 @@ class BillApi {
               bill.paymentDate.getMonth() === index &&
               bill.paymentDate.getFullYear() === year
             ) {
-              buyByMonth[index] += bill.amount;
+              revenueByMonth[index] += bill.amount;
             }
           }
-          totalBuy += bill.amount;
+          totalRevenue += bill.amount;
         }
       } else {
         for (const bill of paidBills) {
@@ -35,11 +36,11 @@ class BillApi {
             bill.paymentDate.getMonth() + 1 === time &&
             bill.paymentDate.getFullYear() === year
           ) {
-            totalBuy += bill.amount;
+            totalRevenue += bill.amount;
           }
         }
       }
-      return res.json(responseSuccessDetails({ totalBuy, buyByMonth }));
+      return res.json(responseSuccessDetails({ totalRevenue, revenueByMonth }));
     } catch (err) {
       return res.json(responseError(err));
     }
@@ -130,6 +131,35 @@ class BillApi {
       return res.json(responseError("loi"));
     }
   }
+
+  async getAll(req, res, next) {
+    try {
+      let totalRevenue = 0;
+      let totalBuy = 0;
+
+      const totalUser = await User.countDocuments({});
+      const totalSong = await Song.countDocuments({});
+
+      const paidBills = await Bill.find({ isPaid: true });
+      for (const bill of paidBills) {
+        if (bill.isPaid) {
+          totalRevenue += bill.amount;
+          totalBuy++;
+        }
+      }
+
+      return res.json(
+        responseSuccessDetails({
+          totalBuy,
+          totalRevenue,
+          totalUser,
+          totalSong,
+        })
+      );
+    } catch (err) {
+      return res.json(responseError(err));
+    }
+  }
 }
 
 const billApi = new BillApi();
@@ -137,5 +167,6 @@ const billApi = new BillApi();
 router.get("/revenue/:time", billApi.getRevenue);
 router.get("/revenue-info", billApi.getRevenueInfo);
 router.get("/buy-count/:time", billApi.getBuyCount);
+router.get("/revenue-all", billApi.getAll);
 
 module.exports = router;

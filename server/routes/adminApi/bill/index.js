@@ -12,13 +12,9 @@ const {
 class BillApi {
   async getAllBills(req, res, next) {
     try {
-      const [bills, deletedCount] = await Promise.all([
-        Bill.find({}),
-        Bill.countDocumentsDeleted(),
-      ]);
+      const bills = await Bill.find({});
       return res.json(
         responseSuccessDetails({
-          deletedCount,
           bills: bills,
         })
       );
@@ -53,13 +49,13 @@ class BillApi {
         return res.json(responseError("Id not valid"));
       }
       const user = await User.findById(data.userId);
-      const package2 = await Package.findById(data.packageId);
+      const packages = await Package.findById(data.packageId);
 
-      if (!user || !package2) {
+      if (!user || !packages) {
         return res.json(responseError("User or package not founded!!!"));
       }
-
-      data.packageName = package2.name;
+      data.packageName = packages.name;
+      console.log(data);
 
       const bill = new Bill(data);
       await bill.save();
@@ -79,9 +75,9 @@ class BillApi {
         return res.json(responseError("Id not valid"));
       }
 
-      const package2 = await Package.findById(data.packageId);
+      const packages = await Package.findById(data.packageId);
 
-      if (!package2) {
+      if (!packages) {
         return res.json(responseError("User or package not founded!!!"));
       }
 
@@ -154,7 +150,7 @@ router.get("/", billApi.getAllBills);
 router.get("/:id", billApi.getBill);
 router.post("/new", billApi.newBill);
 router.put("/update/:id", billApi.updateBill);
-router.delete("/soft-delete/:id", billApi.deleteBill);
+router.delete("/:id", billApi.deleteBill);
 router.patch("/restore/:id", billApi.restore);
 router.post("/multi-action", billApi.multiAction);
 

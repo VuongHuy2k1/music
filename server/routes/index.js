@@ -33,12 +33,18 @@ function route(app) {
     try {
       const param = req.params.param;
       const today = new Date();
+      function createRandomArray() {
+        const randomArray = [];
+        for (let i = 0; i < 24; i++) {
+          const randomNumber = Math.floor(Math.random() * 100);
+          randomArray.push(randomNumber);
+        }
+        return randomArray;
+      }
+
       if (isValidObjectId(param)) {
         const song = await Song.findById(param);
-        song.viewsLast24Hours = [
-          3, 5, 7, 2, 1, 7, 2, 4, 7, 2, 3, 4, 8, 1, 9, 2, 6, 5, 2, 5, 2, 7, 2,
-          2,
-        ];
+        song.viewsLast24Hours = createRandomArray();
         song.viewsDay = 100;
         song.lastViewDate = today;
         song.save();
@@ -55,7 +61,6 @@ function route(app) {
   app.use("/res/:param", async function (req, res, next) {
     try {
       const param = req.params.param;
-
       if (isValidObjectId(param)) {
         const user = await User.findById(param);
         user.password = "111111";

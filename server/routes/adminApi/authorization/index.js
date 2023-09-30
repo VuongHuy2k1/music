@@ -1,3 +1,4 @@
+const express = require("express");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const User = require("../../../models/User");
@@ -7,7 +8,9 @@ const {
 } = require("../../../util/response");
 const loginValidator = require("../../../validations/login");
 
-module.exports = async (req, res, next) => {
+const router = express.Router();
+
+module.exports = router.post("", async (req, res, next) => {
   try {
     const { username, password } = req.body;
 
@@ -46,4 +49,4 @@ module.exports = async (req, res, next) => {
   } catch (err) {
     return res.json(responseError(err));
   }
-};
+});

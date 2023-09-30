@@ -78,11 +78,12 @@ class PackageApi {
 
         bill.isUsed = true;
 
-        const [userSave, updateBill] = await Promise.all([
-          user.save(),
+        await Promise.all([
+          User.updateOne({ _id: user.id }, user),
           bill.save(),
         ]);
-        return res.json(responseSuccessDetails({ ...updateBill, ...user }));
+
+        return res.json(responseSuccessDetails({ ...bill, ...user }));
       } else {
         return res.json(responseError("Code is incorrect or has been used"));
       }

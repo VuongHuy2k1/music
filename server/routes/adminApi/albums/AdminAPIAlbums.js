@@ -153,7 +153,7 @@ router.get("/", adminAPIAlbums.getAllAlbums);
 router.get("/:id", adminAPIAlbums.getAlbum);
 router.post("/new", adminAPIAlbums.newAlbum);
 router.put("/update/:id", adminAPIAlbums.updateAlbum);
-router.delete("/soft-delete/:id", adminAPIAlbums.deleteAlbum);
+router.delete("/:id", adminAPIAlbums.deleteAlbum);
 // router.get("/destroy/:id", adminAPIAlbums.destroy);
 router.patch("/restore/:id", adminAPIAlbums.restore);
 router.post("/multi-action", adminAPIAlbums.multiAction);

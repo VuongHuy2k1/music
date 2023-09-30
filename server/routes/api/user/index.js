@@ -82,7 +82,7 @@ router.post("/signup", async (req, res, next) => {
     user.role = "basic";
     user.code = chars;
 
-    await user.save();
+    await User.updateOne({ _id: user.id }, user);
 
     const mailOptions = {
       from: process.env.ADMIN_MAIL,
@@ -104,7 +104,6 @@ router.post("/signup", async (req, res, next) => {
     };
 
     let emailTransporter = await createMailTransporter();
-
     await emailTransporter.sendMail(mailOptions);
 
     return res.json(responseSuccessDetails("Account successfully created"));
@@ -134,7 +133,7 @@ router.get("/verify-mail", async (req, res) => {
       ) {
         user.role = "user";
         user.code = "";
-        await user.save();
+        await User.updateOne({ _id: user.id }, user);
         return res.json(responseSuccessDetails(user));
       } else {
         return res.json(responseError("Code has wrong or expired"));
@@ -151,13 +150,13 @@ router.get("/auth/:token", (req, res) => {
   try {
     const token = req.params.token;
 
-    if (!token) return res.json(responseError("Token not found", 401));
+    if (!token) return res.json(responseError("Token not found", 402));
 
     const verified = jwt.verify(token, process.env.TOKEN_SECRET);
     const userId = verified._id;
     User.findById({ _id: userId }, { password: 0 }).then((user) => {
       if (!user) {
-        return res.json(responseError("User not found", 401));
+        return res.json(responseError("User not found", 402));
       }
       return res.json(responseSuccessDetails(user));
     });
@@ -176,7 +175,7 @@ router.get("/forgot-password", async (req, res) => {
     if (user) {
       const chars = generateRandomString(6);
       user.code = chars;
-      await user.save();
+      await User.updateOne({ _id: user.id }, user);
       // send mail
       const mailOptions = {
         from: process.env.ADMIN_MAIL,
@@ -197,6 +196,7 @@ router.get("/forgot-password", async (req, res) => {
           "<p>From HuTa Music web</p>",
       };
       let emailTransporter = await createMailTransporter();
+
       await emailTransporter.sendMail(mailOptions);
       // end send mail
       return res.json(responseSuccessDetails(user.code));

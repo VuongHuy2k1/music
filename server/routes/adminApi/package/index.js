@@ -46,6 +46,15 @@ class PackageApi {
   async newPackage(req, res, next) {
     try {
       const data = req.body;
+      if (data.discount && data.discount > 100) {
+        let number = data.discount;
+        while (number > 100) {
+          number = Math.floor(number / 10);
+        }
+
+        data.discount = number;
+      }
+      console.log(data.discount);
       const adminPackage = new Package(data);
       await adminPackage.save();
 
@@ -61,7 +70,17 @@ class PackageApi {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Id not valid"));
       }
+
       const data = req.body;
+
+      if (data.discount && data.discount > 100) {
+        let number = data.discount;
+        while (number > 100) {
+          number = Math.floor(number / 10);
+        }
+
+        data.discount = number;
+      }
 
       await Package.updateOne({ _id: req.params.id }, data);
       return res.json(responseSuccessDetails("Package updated successfully"));
@@ -134,7 +153,7 @@ router.get("/", packageApi.getAllPackages);
 router.get("/:id", packageApi.getPackage);
 router.post("/new", packageApi.newPackage);
 router.put("/update/:id", packageApi.updatePackage);
-router.delete("/soft-delete/:id", packageApi.deletePackage);
+router.delete("/:id", packageApi.deletePackage);
 router.patch("/restore/:id", packageApi.restore);
 router.post("/multi-action", packageApi.multiAction);
 

@@ -81,9 +81,11 @@ class BillApi {
       bill.isUsed = data.isUsed || false;
       bill.isPaid = data.isPaid || false;
       await bill.save();
-      await user.save();
+      await User.updateOne({ _id: user.id }, user);
 
-      return res.json(responseSuccessDetails("Bill created successfully"));
+      return res.json(
+        responseSuccessDetails("Bill created successfully", user)
+      );
     } catch (err) {
       return res.json(responseError(err));
     }
@@ -134,7 +136,10 @@ class BillApi {
           }
         }
 
-        await Promise.all([user.save(), bill.save()]);
+        await Promise.all([
+          User.updateOne({ _id: user.id }, user),
+          bill.save(),
+        ]);
 
         return res.json(responseSuccessDetails(bill));
       } else {

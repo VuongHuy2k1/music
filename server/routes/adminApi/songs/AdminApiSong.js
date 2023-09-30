@@ -147,7 +147,7 @@ router.get("/", adminAPISongs.index);
 router.get("/:id", adminAPISongs.show);
 router.post("/new", adminAPISongs.store);
 router.put("/update/:id", adminAPISongs.update);
-router.delete("/soft-delete/:id", adminAPISongs.destroy);
+router.delete("/:id", adminAPISongs.destroy);
 router.delete("/force/:id", adminAPISongs.forceDestroy);
 router.get("/bin", adminAPISongs.songBin);
 router.put("/restore/:id", adminAPISongs.restore);
