@@ -21,7 +21,11 @@ module.exports = async function (req, res) {
 
     const { name, gender, nation, dateOfBirth, fileLink } = req.body;
 
-    if (req.file && isValidObjectId(userId)) {
+    if (!isValidObjectId(userId)) {
+      return res.json(responseError("Id not valid"));
+    }
+
+    if (req.file) {
       const filename = await fileUpload.save(req.file.buffer);
       await User.updateOne(
         { _id: userId },
@@ -30,7 +34,7 @@ module.exports = async function (req, res) {
     } else {
       await User.updateOne(
         { _id: userId },
-        { email, name, dateOfBirth, gender, nation }
+        { email, name, dateOfBirth, gender, nation, img: fileLink }
       );
     }
 
