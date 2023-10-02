@@ -10,7 +10,7 @@ const {
   responseSuccessDetails,
   responseError,
 } = require("../../../util/response");
-const { isValidObjectId } = require("mongoose");
+
 const {
   createMailTransporter,
 } = require("../../../util/createMailTransporter");
@@ -113,7 +113,7 @@ router.post("/signup", async (req, res, next) => {
   }
 });
 
-router.get("/verify-mail", async (req, res) => {
+router.post("/verify-mail", async (req, res) => {
   try {
     const { code, userEmail } = req.body;
 
@@ -166,7 +166,7 @@ router.get("/auth/:token", (req, res) => {
   }
 });
 
-router.get("/forgot-password", async (req, res) => {
+router.post("/forgot-password", async (req, res) => {
   try {
     const { userEmail, username } = req.body;
 
@@ -209,7 +209,7 @@ router.get("/forgot-password", async (req, res) => {
   }
 });
 
-router.get("/verify-reset-password", async (req, res) => {
+router.post("/verify-reset-password", async (req, res) => {
   try {
     const { code, userEmail, username, password, rePassword } = req.body;
 

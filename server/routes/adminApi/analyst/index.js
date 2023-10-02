@@ -16,7 +16,7 @@ class BillApi {
       const year = today.getFullYear();
       const time = Number(req.params.time) || 0;
       let totalRevenue = 0;
-      let revenueByMonth = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      let revenueByMonth = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
       const paidBills = await Bill.find({ isPaid: true });
       if (time === 0) {
         for (const bill of paidBills) {
@@ -52,7 +52,7 @@ class BillApi {
       const year = today.getFullYear();
       const time = Number(req.params.time) || 0;
       let totalBuy = 0;
-      let buyByMonth = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      let buyByMonth = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
       const paidBills = await Bill.find({ isPaid: true });
       if (time === 0) {
         for (const bill of paidBills) {
@@ -160,6 +160,44 @@ class BillApi {
       return res.json(responseError(err));
     }
   }
+
+  async getMonthlyData(req, res, next) {
+    try {
+      const today = new Date();
+      const year = today.getFullYear();
+
+      let revenueByMonth = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      let buyByMonth = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+      const paidBills = await Bill.find({ isPaid: true });
+
+      for (const bill of paidBills) {
+        for (let index = 0; index <= 11; index++) {
+          if (
+            bill.paymentDate.getMonth() === index &&
+            bill.paymentDate.getFullYear() === year
+          ) {
+            revenueByMonth[index] += bill.amount;
+            buyByMonth[index]++;
+          }
+        }
+      }
+
+      return res.json(responseSuccessDetails({ buyByMonth, revenueByMonth }));
+    } catch (err) {
+      return res.json(responseError(err));
+    }
+  }
+
+  async getTopViewSong(req, res, next) {
+    try {
+      const songs = await Song.find({});
+
+      return res.json(responseSuccessDetails(songs));
+    } catch (err) {
+      return res.json(responseError(err));
+    }
+  }
 }
 
 const billApi = new BillApi();
@@ -168,5 +206,7 @@ router.get("/revenue/:time", billApi.getRevenue);
 router.get("/revenue-info", billApi.getRevenueInfo);
 router.get("/buy-count/:time", billApi.getBuyCount);
 router.get("/revenue-all", billApi.getAll);
+router.get("/get-monthly", billApi.getMonthlyData);
+router.get("/top-song", billApi.getTopViewSong);
 
 module.exports = router;
