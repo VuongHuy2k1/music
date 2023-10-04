@@ -34,7 +34,7 @@ module.exports = async function (req, res) {
     } else {
       await User.updateOne(
         { _id: userId },
-        { email, name, dateOfBirth, gender, nation, img: fileLink }
+        { name, dateOfBirth, gender, nation, img: fileLink }
       );
     }
 
