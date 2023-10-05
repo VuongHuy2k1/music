@@ -12,10 +12,16 @@ const {
 class BillApi {
   async getAllBills(req, res, next) {
     try {
-      const bills = await Bill.find({});
+      const [item, itemDeleted, deletedCount] = await Promise.all([
+        Bill.find({}),
+        Bill.findDeleted({}),
+        Bill.countDocumentsDeleted(),
+      ]);
       return res.json(
         responseSuccessDetails({
-          bills: bills,
+          deletedCount,
+          item,
+          itemDeleted,
         })
       );
     } catch (err) {

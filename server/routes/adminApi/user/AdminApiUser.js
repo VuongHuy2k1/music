@@ -14,7 +14,7 @@ const router = express.Router();
 // [GET] route /user/list
 router.get("/", async (req, res, next) => {
   try {
-    const [users, usersDeleted, deletedCount] = await Promise.all([
+    const [item, itemDeleted, deletedCount] = await Promise.all([
       User.find({}),
       User.findDeleted({}),
       User.countDocumentsDeleted(),
@@ -22,8 +22,8 @@ router.get("/", async (req, res, next) => {
     return res.json(
       responseSuccessDetails({
         deletedCount,
-        users,
-        usersDeleted,
+        item,
+        itemDeleted,
       })
     );
   } catch (err) {
@@ -148,14 +148,14 @@ router.delete("/:id", async (req, res, next) => {
   }
 });
 
-router.delete("destroy/:id", async (req, res, next) => {
+router.delete("/destroy/:id", async (req, res, next) => {
   try {
     if (!isValidObjectId(req.params.id)) {
       return res.json(responseError("Invalid ID"));
     }
     // user to delete
-    const user = await User.findById(req.params.id);
-
+    const user = await User.find({ _id: req.params.id });
+    console.log(user);
     // role of current admin
     const admin = req.user;
 
@@ -202,6 +202,20 @@ router.get("/auth/:token", (req, res) => {
   } catch (err) {
     console.error("Error:", err);
     return res.json(responseError("Internal server error", 500));
+  }
+});
+
+router.get("/restore/:id", async (req, res) => {
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.json(responseError("Invalid ID"));
+    }
+    await User.restore({ _id: req.params.id });
+    return res.json(
+      responseSuccessDetails({ message: "Singer restored successfully" })
+    );
+  } catch (err) {
+    return res.json(responseError(err));
   }
 });
 

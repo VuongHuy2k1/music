@@ -15,14 +15,16 @@ require("dotenv").config();
 class AdminAPISinger {
   async getAllSinger(req, res, next) {
     try {
-      const [singer, deletedCount] = await Promise.all([
+      const [item, itemDeleted, deletedCount] = await Promise.all([
         Singer.find({}),
+        Singer.findDeleted({}),
         Singer.countDocumentsDeleted(),
       ]);
       return res.json(
         responseSuccessDetails({
           deletedCount,
-          singers: singer,
+          item,
+          itemDeleted,
         })
       );
     } catch (err) {
@@ -76,7 +78,7 @@ class AdminAPISinger {
   }
 
   // [DELETE] /singer/:id
-  async destroy(req, res, next) {
+  async deleteSinger(req, res, next) {
     try {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Invalid ID"));
@@ -177,7 +179,8 @@ router.get("/", adminAPISinger.getAllSinger);
 router.get("/:id", adminAPISinger.getSinger);
 router.post("/new", adminAPISinger.store);
 router.put("/update/:id", adminAPISinger.update);
-router.delete("/:id", adminAPISinger.destroy);
+router.delete("/:id", adminAPISinger.deleteSinger);
+router.delete("/destroy/:id", adminAPISinger.forceDestroy);
 router.get("/bin", adminAPISinger.singerBin);
 router.patch("/restore/:id", adminAPISinger.restore);
 router.post("/upload-image/:id", adminAPISinger.uploadImage);

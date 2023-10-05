@@ -16,7 +16,7 @@ const userSchema = new Schema(
     gender: { type: String },
     dateOfBirth: { type: Date },
     nation: { type: String },
-    role: { type: String, default: "basic" },
+    role: { type: String, default: "unknown" },
 
     // ++packet
     beginPay: { type: Date },

@@ -47,6 +47,8 @@ router.post("/login", async (req, res) => {
     return res.json(
       responseSuccessDetails({
         userId: id,
+        role: user.role,
+        priority: user.priority,
         isAuthen: true,
         access_token: token,
       })
@@ -79,7 +81,7 @@ router.post("/signup", async (req, res, next) => {
 
     const user = new User(req.body);
 
-    user.role = "basic";
+    user.role = "unknown";
     user.code = chars;
 
     await User.updateOne({ _id: user.id }, user);
@@ -120,18 +122,18 @@ router.post("/verify-mail", async (req, res) => {
     const user = await User.findOne({ email: userEmail });
 
     if (user) {
-      let today = new Date();
-      const date1 = new Date(user.updatedAt);
-      const date2 = today;
-      const timeDifference = date2.getTime() - date1.getTime();
-      const minutesDifference = timeDifference / (1000 * 60);
+      // let today = new Date();
+      // const date1 = new Date(user.updatedAt);
+      // const date2 = today;
+      // const timeDifference = date2.getTime() - date1.getTime();
+      // const minutesDifference = timeDifference / (1000 * 60);
       if (
         user.code === code &&
-        minutesDifference < 5 &&
+        // minutesDifference < 5 &&
         code != "" &&
         user.code != ""
       ) {
-        user.role = "user";
+        user.role = "basic";
         user.code = "";
         await User.updateOne({ _id: user.id }, user);
         return res.json(responseSuccessDetails(user));
@@ -225,7 +227,8 @@ router.post("/verify-reset-password", async (req, res) => {
         user.code === code &&
         minutesDifference < 5 &&
         code != "" &&
-        user.code != ""
+        user.code != "" &&
+        user.role !== "unknown"
       ) {
         if (password === rePassword) {
           user.code = "";
