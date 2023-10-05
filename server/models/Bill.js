@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const mongooseDelete = require("mongoose-delete");
 
 const BillSchema = new Schema(
   {
@@ -15,5 +16,10 @@ const BillSchema = new Schema(
   },
   { timestamps: true }
 );
+
+BillSchema.plugin(mongooseDelete, {
+  deletedAt: true,
+  overrideMethods: true,
+});
 
 module.exports = mongoose.model("Bill", BillSchema);

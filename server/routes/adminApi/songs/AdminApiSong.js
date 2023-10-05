@@ -12,14 +12,16 @@ const {
 class AdminAPISongs {
   async index(req, res, next) {
     try {
-      const [songs, deletedCount] = await Promise.all([
+      const [item, itemDeleted, deletedCount] = await Promise.all([
         Song.find({}),
+        Song.findDeleted({}),
         Song.countDocumentsDeleted(),
       ]);
       return res.json(
         responseSuccessDetails({
           deletedCount,
-          songs: songs,
+          item,
+          itemDeleted,
         })
       );
     } catch (err) {
@@ -147,10 +149,10 @@ router.get("/", adminAPISongs.index);
 router.get("/:id", adminAPISongs.show);
 router.post("/new", adminAPISongs.store);
 router.put("/update/:id", adminAPISongs.update);
-router.delete("/soft-delete/:id", adminAPISongs.destroy);
-router.delete("/force/:id", adminAPISongs.forceDestroy);
+router.delete("/:id", adminAPISongs.destroy);
+router.delete("/destroy/:id", adminAPISongs.forceDestroy);
 router.get("/bin", adminAPISongs.songBin);
-router.put("/restore/:id", adminAPISongs.restore);
+router.get("/restore/:id", adminAPISongs.restore);
 router.post("/multi-action", adminAPISongs.handleFormAction);
 
 module.exports = router;

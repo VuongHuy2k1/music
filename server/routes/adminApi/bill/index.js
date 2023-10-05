@@ -12,14 +12,16 @@ const {
 class BillApi {
   async getAllBills(req, res, next) {
     try {
-      const [bills, deletedCount] = await Promise.all([
+      const [item, itemDeleted, deletedCount] = await Promise.all([
         Bill.find({}),
+        Bill.findDeleted({}),
         Bill.countDocumentsDeleted(),
       ]);
       return res.json(
         responseSuccessDetails({
           deletedCount,
-          bills: bills,
+          item,
+          itemDeleted,
         })
       );
     } catch (err) {
@@ -53,13 +55,13 @@ class BillApi {
         return res.json(responseError("Id not valid"));
       }
       const user = await User.findById(data.userId);
-      const package2 = await Package.findById(data.packageId);
+      const packages = await Package.findById(data.packageId);
 
-      if (!user || !package2) {
+      if (!user || !packages) {
         return res.json(responseError("User or package not founded!!!"));
       }
-
-      data.packageName = package2.name;
+      data.packageName = packages.name;
+      console.log(data);
 
       const bill = new Bill(data);
       await bill.save();
@@ -79,9 +81,9 @@ class BillApi {
         return res.json(responseError("Id not valid"));
       }
 
-      const package2 = await Package.findById(data.packageId);
+      const packages = await Package.findById(data.packageId);
 
-      if (!package2) {
+      if (!packages) {
         return res.json(responseError("User or package not founded!!!"));
       }
 
@@ -99,27 +101,25 @@ class BillApi {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Id not valid"));
       }
-      await Bill.deleteOne({ _id: req.params.id });
+      await Bill.delete({ _id: req.params.id });
       return res.json(responseSuccessDetails("Bill deleted successfully"));
     } catch (err) {
       return res.json(responseError(err));
     }
   }
 
-  // [GET] /bill/bin
   async destroy(req, res, next) {
     try {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Id not valid"));
       }
-      const bills = await Bill.findDeleted({});
+      const bills = await Bill.deleteOne({ _id: req.params.id });
       return res.json(responseSuccessDetails(bills));
     } catch (err) {
       return res.json(responseError(err));
     }
   }
 
-  // [PATCH] bill/restore/:id
   async restore(req, res, next) {
     try {
       if (!isValidObjectId(req.params.id)) {
@@ -154,8 +154,9 @@ router.get("/", billApi.getAllBills);
 router.get("/:id", billApi.getBill);
 router.post("/new", billApi.newBill);
 router.put("/update/:id", billApi.updateBill);
-router.delete("/soft-delete/:id", billApi.deleteBill);
-router.patch("/restore/:id", billApi.restore);
+router.delete("/:id", billApi.deleteBill);
+router.delete("/destroy/:id", billApi.destroy);
+router.get("/restore/:id", billApi.restore);
 router.post("/multi-action", billApi.multiAction);
 
 module.exports = router;

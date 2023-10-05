@@ -10,7 +10,7 @@ const {
   responseSuccessDetails,
   responseError,
 } = require("../../../util/response");
-const { isValidObjectId } = require("mongoose");
+
 const {
   createMailTransporter,
 } = require("../../../util/createMailTransporter");
@@ -47,6 +47,8 @@ router.post("/login", async (req, res) => {
     return res.json(
       responseSuccessDetails({
         userId: id,
+        role: user.role,
+        priority: user.priority,
         isAuthen: true,
         access_token: token,
       })
@@ -79,10 +81,10 @@ router.post("/signup", async (req, res, next) => {
 
     const user = new User(req.body);
 
-    user.role = "basic";
+    user.role = "unknown";
     user.code = chars;
 
-    await user.save();
+    await User.updateOne({ _id: user.id }, user);
 
     const mailOptions = {
       from: process.env.ADMIN_MAIL,
@@ -104,7 +106,6 @@ router.post("/signup", async (req, res, next) => {
     };
 
     let emailTransporter = await createMailTransporter();
-
     await emailTransporter.sendMail(mailOptions);
 
     return res.json(responseSuccessDetails("Account successfully created"));
@@ -114,27 +115,27 @@ router.post("/signup", async (req, res, next) => {
   }
 });
 
-router.get("/verify-mail", async (req, res) => {
+router.post("/verify-mail", async (req, res) => {
   try {
     const { code, userEmail } = req.body;
 
     const user = await User.findOne({ email: userEmail });
 
     if (user) {
-      let today = new Date();
-      const date1 = new Date(user.updatedAt);
-      const date2 = today;
-      const timeDifference = date2.getTime() - date1.getTime();
-      const minutesDifference = timeDifference / (1000 * 60);
+      // let today = new Date();
+      // const date1 = new Date(user.updatedAt);
+      // const date2 = today;
+      // const timeDifference = date2.getTime() - date1.getTime();
+      // const minutesDifference = timeDifference / (1000 * 60);
       if (
         user.code === code &&
-        minutesDifference < 5 &&
+        // minutesDifference < 5 &&
         code != "" &&
         user.code != ""
       ) {
-        user.role = "user";
+        user.role = "basic";
         user.code = "";
-        await user.save();
+        await User.updateOne({ _id: user.id }, user);
         return res.json(responseSuccessDetails(user));
       } else {
         return res.json(responseError("Code has wrong or expired"));
@@ -151,13 +152,13 @@ router.get("/auth/:token", (req, res) => {
   try {
     const token = req.params.token;
 
-    if (!token) return res.json(responseError("Token not found", 401));
+    if (!token) return res.json(responseError("Token not found", 402));
 
     const verified = jwt.verify(token, process.env.TOKEN_SECRET);
     const userId = verified._id;
     User.findById({ _id: userId }, { password: 0 }).then((user) => {
       if (!user) {
-        return res.json(responseError("User not found", 401));
+        return res.json(responseError("User not found", 402));
       }
       return res.json(responseSuccessDetails(user));
     });
@@ -167,7 +168,7 @@ router.get("/auth/:token", (req, res) => {
   }
 });
 
-router.get("/forgot-password", async (req, res) => {
+router.post("/forgot-password", async (req, res) => {
   try {
     const { userEmail, username } = req.body;
 
@@ -176,7 +177,7 @@ router.get("/forgot-password", async (req, res) => {
     if (user) {
       const chars = generateRandomString(6);
       user.code = chars;
-      await user.save();
+      await User.updateOne({ _id: user.id }, user);
       // send mail
       const mailOptions = {
         from: process.env.ADMIN_MAIL,
@@ -197,6 +198,7 @@ router.get("/forgot-password", async (req, res) => {
           "<p>From HuTa Music web</p>",
       };
       let emailTransporter = await createMailTransporter();
+
       await emailTransporter.sendMail(mailOptions);
       // end send mail
       return res.json(responseSuccessDetails(user.code));
@@ -209,7 +211,7 @@ router.get("/forgot-password", async (req, res) => {
   }
 });
 
-router.get("/verify-reset-password", async (req, res) => {
+router.post("/verify-reset-password", async (req, res) => {
   try {
     const { code, userEmail, username, password, rePassword } = req.body;
 
@@ -225,7 +227,8 @@ router.get("/verify-reset-password", async (req, res) => {
         user.code === code &&
         minutesDifference < 5 &&
         code != "" &&
-        user.code != ""
+        user.code != "" &&
+        user.role !== "unknown"
       ) {
         if (password === rePassword) {
           user.code = "";

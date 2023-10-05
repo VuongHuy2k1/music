@@ -16,7 +16,7 @@ const userSchema = new Schema(
     gender: { type: String },
     dateOfBirth: { type: Date },
     nation: { type: String },
-    role: { type: String, default: "basic" },
+    role: { type: String, default: "unknown" },
 
     // ++packet
     beginPay: { type: Date },
@@ -40,16 +40,14 @@ userSchema.plugin(mongooseDelete, {
 
 userSchema.pre("save", function (next) {
   const user = this;
-  if (user.password || user.rePassword) {
-    bcrypt.genSalt(10, (err, salt) => {
+  bcrypt.genSalt(10, (err, salt) => {
+    if (err) return next(err);
+    bcrypt.hash(user.password, salt, (err, hash) => {
       if (err) return next(err);
-      bcrypt.hash(user.password, salt, (err, hash) => {
-        if (err) return next(err);
-        user.password = hash;
-        next();
-      });
+      user.password = hash;
+      next();
     });
-  }
+  });
 });
 
 userSchema.methods.comparePassword = function (candidatePassword) {

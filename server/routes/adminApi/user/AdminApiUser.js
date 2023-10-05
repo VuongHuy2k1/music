@@ -14,14 +14,16 @@ const router = express.Router();
 // [GET] route /user/list
 router.get("/", async (req, res, next) => {
   try {
-    const [users, deletedCount] = await Promise.all([
+    const [item, itemDeleted, deletedCount] = await Promise.all([
       User.find({}),
+      User.findDeleted({}),
       User.countDocumentsDeleted(),
     ]);
     return res.json(
       responseSuccessDetails({
         deletedCount,
-        users,
+        item,
+        itemDeleted,
       })
     );
   } catch (err) {
@@ -45,6 +47,7 @@ router.get("/:id", async (req, res, next) => {
 router.post("/signup", async (req, res, next) => {
   try {
     const { username, password } = req.body;
+    console.log(username, password);
     const { isValid, errors } = signupValidator(req.body);
 
     if (!isValid) {
@@ -58,12 +61,12 @@ router.post("/signup", async (req, res, next) => {
     }
 
     const user = new User(req.body);
-    user.role = "user";
+    user.role = user.role || "basic";
     await user.save();
 
     return res.json(responseSuccessDetails(user));
   } catch (err) {
-    return res.json(responseError(err));
+    return res.json(responseError("Internal server!!!"));
   }
 });
 
@@ -88,26 +91,26 @@ router.put("/edit/:id", async (req, res, next) => {
       return res.json(responseError("Invalid ID"));
     }
 
-    const user = User.findById(req.params.id);
-    // role of current admin
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.json(responseError("User not found!"));
+    }
+
     const admin = req.user;
 
-    if (
-      (admin.role === "admin" || admin.role === "superAdmin") &&
-      user.role != "admin"
-    ) {
-      await User.updateOne({ _id: req.params.id }, req.body);
-      return res.json(responseSuccessDetails("Update success"));
-    } else if (user.role === "admin" && admin.role === "superAdmin") {
-      await User.updateOne({ _id: req.params.id }, req.body);
-      return res.json(responseSuccessDetails("Update success"));
-    } else if (user.role === "superAdmin") {
-      return res.json(responseError("This account can't be delete!"));
-    } else {
+    if (user.role === "superAdmin") {
+      return res.json(responseError("This account can't be deleted!"));
+    }
+
+    if (admin.role !== "superAdmin" && user.role === "admin") {
       return res.json(
         responseError("Your role does not have enough authority!")
       );
     }
+
+    await User.updateOne({ _id: req.params.id }, req.body);
+    return res.json(responseSuccessDetails("Update success"));
   } catch (err) {
     return res.json(responseError(err));
   }
@@ -124,7 +127,9 @@ router.delete("/:id", async (req, res, next) => {
     // role of current admin
     const admin = req.user;
 
-    if (
+    if (user.role === "superAdmin") {
+      return res.json(responseError("This account can't be delete!"));
+    } else if (
       (admin.role === "admin" || admin.role === "superAdmin") &&
       user.role != "admin"
     ) {
@@ -133,8 +138,38 @@ router.delete("/:id", async (req, res, next) => {
     } else if (user.role === "admin" && admin.role === "superAdmin") {
       await User.delete({ _id: req.params.id });
       return res.json(responseSuccessDetails("Delete user successfully!"));
-    } else if (user.role === "superAdmin") {
+    } else {
+      return res.json(
+        responseError("Your role does not have enough authority!")
+      );
+    }
+  } catch (err) {
+    return res.json(responseError(err));
+  }
+});
+
+router.delete("/destroy/:id", async (req, res, next) => {
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.json(responseError("Invalid ID"));
+    }
+    // user to delete
+    const user = await User.find({ _id: req.params.id });
+    console.log(user);
+    // role of current admin
+    const admin = req.user;
+
+    if (user.role === "superAdmin") {
       return res.json(responseError("This account can't be delete!"));
+    } else if (
+      (admin.role === "admin" || admin.role === "superAdmin") &&
+      user.role != "admin"
+    ) {
+      await User.deleteOne({ _id: req.params.id });
+      return res.json(responseSuccessDetails("Delete user successfully!"));
+    } else if (user.role === "admin" && admin.role === "superAdmin") {
+      await User.deleteOne({ _id: req.params.id });
+      return res.json(responseSuccessDetails("Delete user successfully!"));
     } else {
       return res.json(
         responseError("Your role does not have enough authority!")
@@ -167,6 +202,21 @@ router.get("/auth/:token", (req, res) => {
   } catch (err) {
     console.error("Error:", err);
     return res.json(responseError("Internal server error", 500));
+  }
+});
+
+router.get("/restore/:id", async (req, res) => {
+  try {
+    console.log(req.params.id);
+    if (!isValidObjectId(req.params.id)) {
+      return res.json(responseError("Invalid ID"));
+    }
+    await User.updateOne({ _id: req.params.id }, { username: "12312312" });
+    return res.json(
+      responseSuccessDetails({ message: "User restored successfully" })
+    );
+  } catch (err) {
+    return res.json(responseError(err));
   }
 });
 

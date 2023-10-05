@@ -19,9 +19,18 @@ module.exports = async function (req, res) {
     const verified = jwt.verify(token, process.env.TOKEN_SECRET);
     const userId = verified._id;
 
-    const { name, gender, nation, dateOfBirth, fileLink } = req.body;
+    const { name, gender, nation, fileLink } = req.body;
+    let { dateOfBirth } = req.body;
+    if (!isValidObjectId(userId)) {
+      return res.json(responseError("Id not valid"));
+    }
 
-    if (req.file && isValidObjectId(userId)) {
+    if (dateOfBirth) {
+      dateOfBirth = new Date(dateOfBirth);
+    }
+
+    console.log(dateOfBirth);
+    if (req.file) {
       const filename = await fileUpload.save(req.file.buffer);
       await User.updateOne(
         { _id: userId },
@@ -30,7 +39,7 @@ module.exports = async function (req, res) {
     } else {
       await User.updateOne(
         { _id: userId },
-        { email, name, dateOfBirth, gender, nation }
+        { name, dateOfBirth, gender, nation, img: fileLink }
       );
     }
 

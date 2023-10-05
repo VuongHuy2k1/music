@@ -10,14 +10,16 @@ const {
 class PackageApi {
   async getAllPackages(req, res, next) {
     try {
-      const [packages, deletedCount] = await Promise.all([
+      const [item, itemDeleted, deletedCount] = await Promise.all([
         Package.find({}),
+        Package.findDeleted({}),
         Package.countDocumentsDeleted(),
       ]);
       return res.json(
         responseSuccessDetails({
           deletedCount,
-          packages: packages,
+          item,
+          itemDeleted,
         })
       );
     } catch (err) {
@@ -46,6 +48,15 @@ class PackageApi {
   async newPackage(req, res, next) {
     try {
       const data = req.body;
+      if (data.discount && data.discount > 100) {
+        let number = data.discount;
+        while (number > 100) {
+          number = Math.floor(number / 10);
+        }
+
+        data.discount = number;
+      }
+      console.log(data.discount);
       const adminPackage = new Package(data);
       await adminPackage.save();
 
@@ -61,7 +72,17 @@ class PackageApi {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Id not valid"));
       }
+
       const data = req.body;
+
+      if (data.discount && data.discount > 100) {
+        let number = data.discount;
+        while (number > 100) {
+          number = Math.floor(number / 10);
+        }
+
+        data.discount = number;
+      }
 
       await Package.updateOne({ _id: req.params.id }, data);
       return res.json(responseSuccessDetails("Package updated successfully"));
@@ -76,7 +97,7 @@ class PackageApi {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Id not valid"));
       }
-      await Package.deleteOne({ _id: req.params.id });
+      await Package.delete({ _id: req.params.id });
       return res.json(responseSuccessDetails("Package deleted successfully"));
     } catch (err) {
       return res.json(responseError(err));
@@ -89,7 +110,7 @@ class PackageApi {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Id not valid"));
       }
-      const packages = await Package.findDeleted({});
+      await Package.deleteOne({ _id: req.params.id });
       return res.json(responseSuccessDetails(packages));
     } catch (err) {
       return res.json(responseError(err));
@@ -134,8 +155,9 @@ router.get("/", packageApi.getAllPackages);
 router.get("/:id", packageApi.getPackage);
 router.post("/new", packageApi.newPackage);
 router.put("/update/:id", packageApi.updatePackage);
-router.delete("/soft-delete/:id", packageApi.deletePackage);
-router.patch("/restore/:id", packageApi.restore);
+router.delete("/:id", packageApi.deletePackage);
+router.delete("destroy/:id", packageApi.destroy);
+router.get("/restore/:id", packageApi.restore);
 router.post("/multi-action", packageApi.multiAction);
 
 module.exports = router;
