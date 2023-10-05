@@ -182,7 +182,7 @@ router.put("/update/:id", adminAPISinger.update);
 router.delete("/:id", adminAPISinger.deleteSinger);
 router.delete("/destroy/:id", adminAPISinger.forceDestroy);
 router.get("/bin", adminAPISinger.singerBin);
-router.patch("/restore/:id", adminAPISinger.restore);
+router.get("/restore/:id", adminAPISinger.restore);
 router.post("/upload-image/:id", adminAPISinger.uploadImage);
 
 module.exports = router;

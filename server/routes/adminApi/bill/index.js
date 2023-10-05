@@ -101,27 +101,25 @@ class BillApi {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Id not valid"));
       }
-      await Bill.deleteOne({ _id: req.params.id });
+      await Bill.delete({ _id: req.params.id });
       return res.json(responseSuccessDetails("Bill deleted successfully"));
     } catch (err) {
       return res.json(responseError(err));
     }
   }
 
-  // [GET] /bill/bin
   async destroy(req, res, next) {
     try {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Id not valid"));
       }
-      const bills = await Bill.findDeleted({});
+      const bills = await Bill.deleteOne({ _id: req.params.id });
       return res.json(responseSuccessDetails(bills));
     } catch (err) {
       return res.json(responseError(err));
     }
   }
 
-  // [PATCH] bill/restore/:id
   async restore(req, res, next) {
     try {
       if (!isValidObjectId(req.params.id)) {
@@ -157,7 +155,8 @@ router.get("/:id", billApi.getBill);
 router.post("/new", billApi.newBill);
 router.put("/update/:id", billApi.updateBill);
 router.delete("/:id", billApi.deleteBill);
-router.patch("/restore/:id", billApi.restore);
+router.delete("/destroy/:id", billApi.destroy);
+router.get("/restore/:id", billApi.restore);
 router.post("/multi-action", billApi.multiAction);
 
 module.exports = router;

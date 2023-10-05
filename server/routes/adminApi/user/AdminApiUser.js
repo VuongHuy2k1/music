@@ -207,12 +207,13 @@ router.get("/auth/:token", (req, res) => {
 
 router.get("/restore/:id", async (req, res) => {
   try {
+    console.log(req.params.id);
     if (!isValidObjectId(req.params.id)) {
       return res.json(responseError("Invalid ID"));
     }
-    await User.restore({ _id: req.params.id });
+    await User.updateOne({ _id: req.params.id }, { username: "12312312" });
     return res.json(
-      responseSuccessDetails({ message: "Singer restored successfully" })
+      responseSuccessDetails({ message: "User restored successfully" })
     );
   } catch (err) {
     return res.json(responseError(err));

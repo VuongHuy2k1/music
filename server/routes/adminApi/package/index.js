@@ -157,7 +157,7 @@ router.post("/new", packageApi.newPackage);
 router.put("/update/:id", packageApi.updatePackage);
 router.delete("/:id", packageApi.deletePackage);
 router.delete("destroy/:id", packageApi.destroy);
-router.patch("/restore/:id", packageApi.restore);
+router.get("/restore/:id", packageApi.restore);
 router.post("/multi-action", packageApi.multiAction);
 
 module.exports = router;

@@ -152,7 +152,7 @@ router.put("/update/:id", adminAPISongs.update);
 router.delete("/:id", adminAPISongs.destroy);
 router.delete("/destroy/:id", adminAPISongs.forceDestroy);
 router.get("/bin", adminAPISongs.songBin);
-router.put("/restore/:id", adminAPISongs.restore);
+router.get("/restore/:id", adminAPISongs.restore);
 router.post("/multi-action", adminAPISongs.handleFormAction);
 
 module.exports = router;

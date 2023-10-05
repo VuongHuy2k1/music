@@ -12,14 +12,16 @@ const {
 class AdminAPIAlbums {
   async getAllAlbums(req, res, next) {
     try {
-      const [albums, deletedCount] = await Promise.all([
+      const [item, itemDeleted, deletedCount] = await Promise.all([
         Album.find({}),
+        Album.findDeleted({}),
         Album.countDocumentsDeleted(),
       ]);
       return res.json(
         responseSuccessDetails({
           deletedCount,
-          albums: albums,
+          item,
+          itemDeleted,
         })
       );
     } catch (err) {
@@ -94,7 +96,7 @@ class AdminAPIAlbums {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Id not valid"));
       }
-      await Album.deleteOne({ _id: req.params.id });
+      await Album.delete({ _id: req.params.id });
       return res.json(responseSuccessDetails("Album deleted successfully"));
     } catch (err) {
       return res.json(responseError(err));
@@ -107,7 +109,7 @@ class AdminAPIAlbums {
       if (!isValidObjectId(req.params.id)) {
         return res.json(responseError("Id not valid"));
       }
-      const albums = await Album.findDeleted({});
+      const albums = await Album.deleteOne({ _id: req.params.id });
       return res.json(responseSuccessDetails(albums));
     } catch (err) {
       return res.json(responseError(err));
@@ -154,8 +156,8 @@ router.get("/:id", adminAPIAlbums.getAlbum);
 router.post("/new", adminAPIAlbums.newAlbum);
 router.put("/update/:id", adminAPIAlbums.updateAlbum);
 router.delete("/:id", adminAPIAlbums.deleteAlbum);
-// router.get("/destroy/:id", adminAPIAlbums.destroy);
-router.patch("/restore/:id", adminAPIAlbums.restore);
+router.delete("/destroy/:id", adminAPIAlbums.destroy);
+router.get("/restore/:id", adminAPIAlbums.restore);
 router.post("/multi-action", adminAPIAlbums.multiAction);
 
 module.exports = router;
