@@ -19,9 +19,10 @@ class BillApi {
         return res.json(responseError("Id not valid"));
       }
 
-      const bills = await Bill.find({ userId: userId }).select(
-        "packageId userId amount duration packageName paymentDate -_id"
-      );
+      const bills = await Bill.find({ userId: userId });
+      // .select(
+      //   "packageId packageName userId amount duration paymentDate -_id"
+      // );
 
       if (!bills) {
         return res.status(404).json({ message: "Bill not found" });
@@ -69,6 +70,8 @@ class BillApi {
 
       bill.isUsed = data.isUsed || false;
       bill.isPaid = data.isPaid || false;
+      bill.packageName = packages.name;
+
       await bill.save();
       await User.updateOne({ _id: user.id }, user);
 

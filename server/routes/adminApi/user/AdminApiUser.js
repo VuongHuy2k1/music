@@ -148,6 +148,38 @@ router.delete("/:id", async (req, res, next) => {
   }
 });
 
+router.delete("destroy/:id", async (req, res, next) => {
+  try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.json(responseError("Invalid ID"));
+    }
+    // user to delete
+    const user = await User.findById(req.params.id);
+
+    // role of current admin
+    const admin = req.user;
+
+    if (user.role === "superAdmin") {
+      return res.json(responseError("This account can't be delete!"));
+    } else if (
+      (admin.role === "admin" || admin.role === "superAdmin") &&
+      user.role != "admin"
+    ) {
+      await User.deleteOne({ _id: req.params.id });
+      return res.json(responseSuccessDetails("Delete user successfully!"));
+    } else if (user.role === "admin" && admin.role === "superAdmin") {
+      await User.deleteOne({ _id: req.params.id });
+      return res.json(responseSuccessDetails("Delete user successfully!"));
+    } else {
+      return res.json(
+        responseError("Your role does not have enough authority!")
+      );
+    }
+  } catch (err) {
+    return res.json(responseError(err));
+  }
+});
+
 router.get("/auth/:token", (req, res) => {
   try {
     const token = req.params.token;
