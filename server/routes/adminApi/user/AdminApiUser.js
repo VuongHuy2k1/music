@@ -14,14 +14,16 @@ const router = express.Router();
 // [GET] route /user/list
 router.get("/", async (req, res, next) => {
   try {
-    const [users, deletedCount] = await Promise.all([
+    const [users, usersDeleted, deletedCount] = await Promise.all([
       User.find({}),
+      User.findDeleted({}),
       User.countDocumentsDeleted(),
     ]);
     return res.json(
       responseSuccessDetails({
         deletedCount,
         users,
+        usersDeleted,
       })
     );
   } catch (err) {
