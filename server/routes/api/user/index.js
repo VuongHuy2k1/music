@@ -83,8 +83,7 @@ router.post("/signup", async (req, res, next) => {
 
     user.role = "unknown";
     user.code = chars;
-
-    await User.updateOne({ _id: user.id }, user);
+    await user.save();
 
     const mailOptions = {
       from: process.env.ADMIN_MAIL,
@@ -136,7 +135,7 @@ router.post("/verify-mail", async (req, res) => {
         user.role = "basic";
         user.code = "";
         await User.updateOne({ _id: user.id }, user);
-        return res.json(responseSuccessDetails(user));
+        return res.json(responseSuccessDetails("Success"));
       } else {
         return res.json(responseError("Code has wrong or expired"));
       }
